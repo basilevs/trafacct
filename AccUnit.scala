@@ -1,6 +1,7 @@
 package trafacct;
 import java.util.Date
 import java.lang.{Exception, Throwable, NumberFormatException}
+import scala.collection.mutable.Queue
 
 class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
 
@@ -25,13 +26,16 @@ object Ip {
 class Host(hostname:String, ip:Ip)
 
 object Host {
+	def ip(hostname: String) = null
+	def hostname(ip: Ip) = ip.toString()
 	def parse(s:String): Host  = {
 		try {
-			return new Host(null, Ip.parse(s));
+			val ip = Ip.parse(s)
+			return new Host(hostname(ip), ip);
 		} catch {
-			case e:ParseError => {}
+			case e:ParseError =>
 		}
-		return new Host(s, null)
+		return new Host(s, ip(s))
 	}
 }
 
@@ -44,7 +48,13 @@ object Endpoint {
 	}
 }
 
-
 class Direction(from:Endpoint, to:Endpoint)
 
-class AccUnit(size: Int, start: Date, direction:Direction)
+class AccUnit(size: Long, start: Date, direction:Direction)
+
+trait AccSource extends Iterable[AccUnit]
+
+class AccSourceCached extends private Queue[AccUnit] with AccSource {
+	def ++=(from: AccSource) = super ++= from
+}
+
