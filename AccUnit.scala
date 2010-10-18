@@ -6,7 +6,6 @@ class ParseError(message:String, reason:Throwable) extends Exception(message, re
 
 class Ip(bytes: Array[Int]) {
 	assert(bytes.length==4)
-	def this(s: String) = this(Ip.parseBytes(s))
 }
 
 object Ip {
@@ -20,7 +19,7 @@ object Ip {
 			case e:NumberFormatException => throw new ParseError("Bad ip: "+s, e)
 		}
 	}
-	def parse(s: String): Ip = new Ip(s)
+	def parse(s: String): Ip = new Ip(parseBytes(s))
 }
 
 class Host(hostname:String, ip:Ip)
