@@ -3,10 +3,11 @@ import java.util.Date
 import java.lang.{Exception, Throwable, NumberFormatException}
 import scala.collection.mutable.Queue
 
-class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
+class ParseError(message:String, reason:Throwable) extends Exception(message, reason) {}
 
 class Ip(bytes: Array[Int]) {
 	assert(bytes.length==4)
+	override def toString = { ""+bytes(0)+"."+bytes(1)+"."+bytes(2)+"."+bytes(3) }
 }
 
 object Ip {
@@ -23,7 +24,9 @@ object Ip {
 	def parse(s: String): Ip = new Ip(parseBytes(s))
 }
 
-class Host(hostname:String, ip:Ip)
+class Host(hostname:String, ip:Ip) {
+	override def toString = hostname
+}
 
 object Host {
 	def ip(hostname: String) = null
@@ -39,7 +42,9 @@ object Host {
 	}
 }
 
-class Endpoint(host:Host, port:Int)
+class Endpoint(host:Host, port:Int) {
+	override def toString = ""+host+":"+port
+}
 
 object Endpoint {
 	def parse(s:String) = {
@@ -48,13 +53,18 @@ object Endpoint {
 	}
 }
 
-class Direction(from:Endpoint, to:Endpoint)
+class Direction(from:Endpoint, to:Endpoint) {
+	override def toString = ""+from+" -> "+to
+}
 
-class AccUnit(size: Long, start: Date, direction:Direction)
+class AccUnit(size: Long, start: Date, direction:Direction) {
+	def dateToString(d:Date) = ""+(1900+d.getYear())+"-"+(d.getMonth()+1)+"-"+(d.getDay()+1)
+	override def toString = ""+dateToString(start)+" "+direction+" "+size
+}
 
 trait AccSource extends Iterable[AccUnit]
 
-class AccSourceCached extends private Queue[AccUnit] with AccSource {
-	def ++=(from: AccSource) = super ++= from
+class AccSourceCached extends Queue[AccUnit] with AccSource {
+	def ++=(from: AccSource) = super.++=(from)
 }
 

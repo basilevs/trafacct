@@ -30,4 +30,4 @@ val interfaces = new Array[String](1)
 interfaces(0)="eth4"
 
 val parser = new NetAcct("/var/log/net-acct/net-acct.log", interfaces)
-parser.foreach(x => println(x))
+parser.foreach(x => println(x.toString))
