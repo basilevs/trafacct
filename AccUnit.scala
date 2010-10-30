@@ -8,7 +8,7 @@ import scala.collection.Set
 class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
 
 case class Endpoint(host:InetAddress, port:Int) {
-	override def toString:String = "%s:%d".format(host.getHostAddress(), port)
+	override def toString:String = "%s:%d".format(host.getHostName(), port)
 }
 
 object Endpoint {
@@ -19,13 +19,7 @@ object Endpoint {
 	}
 }
 
-case class Direction(from:Endpoint, to:Endpoint) {
-	override def toString = ""+from+" -> "+to
-}
-
-case class AccUnit(size: Long, start: Date, direction:Direction, protocol:String) {
-	override def toString = ""+Manipulator.dateToString(start)+direction+" "+size
-}
+case class AccUnit(size: Long, start: Date, src:Endpoint, dst:Endpoint, protocol:String);
 
 trait AccSource extends Iterable[AccUnit] {
 	var start:Date =null
@@ -70,15 +64,15 @@ object Manipulator {
 		def reset(i:Endpoint):Endpoint
 	}
 	trait FromField extends Field with EndpointField {
-		def extract(i:AccUnit) = extract(i.direction.from)
-		def reset(i:AccUnit) = new AccUnit(i.size, i.start, new Direction(reset(i.direction.from), i.direction.to), i.protocol)
+		def extract(i:AccUnit) = extract(i.src)
+		def reset(i:AccUnit) = new AccUnit(i.size, i.start, reset(i.src), i.dst, i.protocol)
 	}
 	trait ToField extends Field with EndpointField {
-		def extract(i:AccUnit) = extract(i.direction.to)
-		def reset(i:AccUnit) = new AccUnit(i.size, i.start, new Direction( i.direction.from, reset(i.direction.to)), i.protocol)
+		def extract(i:AccUnit) = extract(i.dst)
+		def reset(i:AccUnit) = new AccUnit(i.size, i.start, i.src, reset(i.dst), i.protocol)
 	}
 	trait HostField extends EndpointField {
-		def extract(i:Endpoint) = ""+i.host //.getHostName()
+		def extract(i:Endpoint) = ""+i.host.getHostName()
 		def reset(i:Endpoint) = new Endpoint(null, i.port)
 	}
 	trait PortField extends EndpointField {
@@ -91,7 +85,7 @@ object Manipulator {
 	class DstPort extends ToField with PortField
 	class Protocol extends Field {
 		def extract(i:AccUnit) = i.protocol
-		def reset(i:AccUnit) =  new AccUnit(i.size, i.start, i.direction, null)
+		def reset(i:AccUnit) =  new AccUnit(i.size, i.start, i.src, i.dst, null)
 	}
 	def dateToString(d:Date) = {
 		if (d!=null)
@@ -101,11 +95,11 @@ object Manipulator {
 	}
 	class DateField extends Field {
 		def extract(i:AccUnit) = dateToString(i.start)
-		def reset(i:AccUnit) =  new AccUnit(i.size, null,  i.direction, i.protocol)
+		def reset(i:AccUnit) =  new AccUnit(i.size, null,  i.src, i.dst, i.protocol)
 	}
 	class SizeField extends Field {
 		def extract(i:AccUnit):String = ""+i.size
-		def reset(i:AccUnit) =  new AccUnit(0, i.start,  i.direction, i.protocol)
+		def reset(i:AccUnit) =  new AccUnit(0, i.start,  i.src, i.dst, i.protocol)
 	}
 
 	allFields += new DateField

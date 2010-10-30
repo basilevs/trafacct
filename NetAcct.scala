@@ -19,9 +19,8 @@ class NetAcct(reader: BufferedReader) extends AccSource {
 			val date = UnixTimeStampToDateTime(fields(0).toLong)
 			val from = parseEndPoint(fields(2), fields(3))
 			val to = parseEndPoint(fields(4), fields(5))
-			val dir = new Direction(from, to)
 			val size:Long = fields(6).toLong
-			new AccUnit(size, date, dir, fields(1))
+			new AccUnit(size, date, from, to, fields(1))
 		}
 	}
 }
