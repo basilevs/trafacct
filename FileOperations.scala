@@ -1,7 +1,8 @@
 package trafacct
 import java.net.URL
 import java.lang.{Exception, Throwable}
-import java.io.{BufferedReader, InputStreamReader, File}
+import java.io.{InputStream, BufferedReader, InputStreamReader, File}
+import java.util.zip.GZIPInputStream
 
 object FileOperations {
 	class FileError(message: String, reason:Throwable) extends Exception(message, reason) {
@@ -27,6 +28,13 @@ object FileOperations {
 			case e:Exception => throw new URLError(s, e)
 		}
 	}
-	def open(u:URL) = new BufferedReader(new InputStreamReader(u.openStream()))
+	def openPotentialArchive(u:URL) = {
+		if (u.getFile.endsWith("gz")) {
+			new GZIPInputStream(u.openStream())
+		} else {
+			u.openStream()
+		}
+	}
+	def open(u:URL) = new BufferedReader(new InputStreamReader(openPotentialArchive(u)))
 }
 
