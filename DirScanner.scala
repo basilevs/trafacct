@@ -11,8 +11,14 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 	private def fileFilterImp = new FileFilter {
 		def accept(f:File): Boolean = return fileFilter(f)
 	}
+	def listFiles = {
+		val rawList = dir.listFiles(fileFilterImp)
+		if (rawList == null)
+			throw new ParseError("Not a directory: "+dir, null)
+		rawList.filter(start == null || _.lastModified > start.getTime)
+	}
 	def elements = new Iterator[AccUnit] {
-		var fileIter = dir.listFiles(fileFilterImp).filter(start == null || _.lastModified > start.getTime).elements
+		var fileIter = listFiles.elements
 		var accIter:Iterator[AccUnit] = null
 		var url:URL = null
 		def next:AccUnit = {

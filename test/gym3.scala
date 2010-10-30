@@ -7,20 +7,32 @@ import FileOperations.{stringToURL, open}
 import Manipulator._
 import DateTools._
 
-val parser = new NetAcct.Dir(new File("/var/log/net-acct/"))
 
-parser.end = dayStart(now)
-//parser.start = dayBefore(parser.end)
-
-println("Start date: "+parser.start)
-val d  = new AccDropper(genSeq(new Src, new Dst))
 def hasHost(u:AccUnit, h:InetAddress) = u.src.host == h || u.dst.host == h
 def hasHosts(u:AccUnit, h:Set[InetAddress]) = h.contains(u.src.host) || h.contains(u.dst.host)
 val badHosts = Set(InetAddress.getByName("10.3.0.1"))
-var stream = parser.filter(!hasHosts(_, badHosts))
+def noBadHosts(u:AccUnit) = !hasHosts(u, badHosts)
+
+val end = dayStart(now)
+//val start = dayBefore(end)
+val start = null
+
+val d  = new AccDropper(genSeq(new Src, new Dst))
 val s = new Summator(d.process)
 
-s.sum(stream)
+println("Start date: "+start)
+
+for (parser <- Set(
+	new NetAcct.Dir(new File("/var/log/net-acct/")),
+	new SquidDir(new File("/var/log/squid3/"))
+		))
+{
+	parser.end = end
+	parser.start = start
+	val stream = parser.filter(noBadHosts)
+	s.sum(stream)
+}
+
 val data = s.toArray
 
 type AccResult = (AccUnit, Long)

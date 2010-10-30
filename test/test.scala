@@ -42,7 +42,7 @@ parser.end = dayStart(now)
 println("Start date: "+parser.start)
 val d = new AccDropper(genSeq(new Src, new Dst))
 val s = new Summator(d.process)
-s++=parser
+s sum parser
 val data = s.toArray
 
 type AccResult = (AccUnit, Long)
