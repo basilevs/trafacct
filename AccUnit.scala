@@ -2,7 +2,7 @@ package trafacct;
 import java.util.Date
 import java.lang.{Exception, Throwable, NumberFormatException}
 import java.net.InetAddress
-import scala.collection.mutable.{Queue, ArrayBuffer, HashSet}
+import scala.collection.mutable.{Queue, HashSet}
 import scala.collection.Set
 
 class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
@@ -50,65 +50,20 @@ object DateTools {
 		cal.add(Calendar.DAY_OF_MONTH, -1)
 		cal.getTime
 	}
-}
-
-object Manipulator {
-	trait Field {
-		def extract(i:AccUnit):String
-		def reset(i:AccUnit):AccUnit
+	implicit def timeStampToDate( unixTimeStamp: Double ) : Date = {
+		// Unix timestamp is seconds past epoch
+		new Date((unixTimeStamp * 1000).toLong);
 	}
-	val allFields = new ArrayBuffer[Field]
-
-	trait EndpointField {
-		def extract(i:Endpoint):String
-		def reset(i:Endpoint):Endpoint
-	}
-	trait FromField extends Field with EndpointField {
-		def extract(i:AccUnit) = extract(i.src)
-		def reset(i:AccUnit) = new AccUnit(i.size, i.start, reset(i.src), i.dst, i.protocol)
-	}
-	trait ToField extends Field with EndpointField {
-		def extract(i:AccUnit) = extract(i.dst)
-		def reset(i:AccUnit) = new AccUnit(i.size, i.start, i.src, reset(i.dst), i.protocol)
-	}
-	trait HostField extends EndpointField {
-		def extract(i:Endpoint) = ""+i.host.getHostName()
-		def reset(i:Endpoint) = new Endpoint(null, i.port)
-	}
-	trait PortField extends EndpointField {
-		def extract(i:Endpoint) = i.port.toString()
-		def reset(i:Endpoint) = new Endpoint(i.host, 0)
-	}
-	class Src extends FromField with HostField
-	class SrcPort extends FromField with PortField
-	class Dst extends ToField with HostField
-	class DstPort extends ToField with PortField
-	class Protocol extends Field {
-		def extract(i:AccUnit) = i.protocol
-		def reset(i:AccUnit) =  new AccUnit(i.size, i.start, i.src, i.dst, null)
-	}
-	def dateToString(d:Date) = {
+	implicit def dateToString(d:Date) = {
 		if (d!=null)
 			String.format("%1$tY-%1$tm-%1$td %1$tT ", d)
 		else 
 			"null"
 	}
-	class DateField extends Field {
-		def extract(i:AccUnit) = dateToString(i.start)
-		def reset(i:AccUnit) =  new AccUnit(i.size, null,  i.src, i.dst, i.protocol)
-	}
-	class SizeField extends Field {
-		def extract(i:AccUnit):String = ""+i.size
-		def reset(i:AccUnit) =  new AccUnit(0, i.start,  i.src, i.dst, i.protocol)
-	}
+}
 
-	allFields += new DateField
-	allFields += new Protocol
-	allFields += new Src
-	allFields += new SrcPort
-	allFields += new Dst
-	allFields += new DstPort
-	allFields += new SizeField
+object Manipulator {
+
 		
 	def genSeq[T](i:T*) = i
 
@@ -132,8 +87,9 @@ object Manipulator {
 }
 
 
-class AccDropper(val shownFields:Iterable[Manipulator.Field]) extends AccUnitProcessor[AccUnit] {
+class AccDropper(val shownFields:Iterable[Field]) extends AccUnitProcessor[AccUnit] {
 	import Manipulator._
+	import Field._
 	val droppedFields = toSet(filterOutByType(allFields, shownFields))
 	
 	def process(input: AccUnit) = {
