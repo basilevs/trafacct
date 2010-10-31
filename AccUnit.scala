@@ -1,14 +1,69 @@
 package trafacct;
 import java.util.Date
 import java.lang.{Exception, Throwable, NumberFormatException}
-import java.net.InetAddress
+import java.net.{InetAddress, UnknownHostException}
 import scala.collection.mutable.{Queue, HashSet}
 import scala.collection.Set
+import scala.runtime.RichByte
+import java.util.regex.Pattern
 
 class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
 
-case class Endpoint(host:InetAddress, port:Int) {
-	override def toString:String = "%s:%d".format(host.getHostName(), port)
+case class Host(name:String, ip:InetAddress) {
+	import Host.{addressToBytes, compareSeqs}
+	def comparejhgjhg(that: Host):Int = {
+		if (ip != null && that.ip != null) {
+			return compareSeqs(ip, that.ip)
+		}
+		name.compare(that.name)
+	}
+	override def toString:String = if (ip!=null) {ip.getHostName} else {name}
+}
+
+object Host {
+	implicit def addressToBytes(a:InetAddress):Array[Byte] = a.getAddress
+	def compareSeqs(a:Seq[Byte], b:Seq[Byte]):Int = {
+		val len = scala.Math.min(a.length, b.length)
+		for (i <- 0 until len)
+			if (a(i)!=b(i))
+				return a(i).compare(b(i))
+		a.length.compare(b.length)
+	}
+	implicit def stringToPattern(s:String): Pattern = Pattern.compile(s)
+	val separators = Seq[Pattern]("\\.", ":")
+	def separatedStrToBytes(s:String, separator:Pattern): Array[Byte] = {
+		val fields = separator.split(s)
+		var rv = new Array[Byte](fields.length);
+		fields.map(_.toInt.toByte).copyToArray(rv, 0)
+		rv
+	}
+	implicit def strToBytes(s:String): Array[Byte] = {
+		for (sep <- separators)
+			if (sep.matcher(s).find())
+				return separatedStrToBytes(s, sep)
+		null
+	}
+	implicit def strToHost(s:String):Host = {
+		var name = s
+		var ip:InetAddress = null
+		try {
+			val bytes = strToBytes(s)
+			if (bytes != null) { 
+				ip = InetAddress.getByAddress(bytes)
+//				println( "parsed ip: "+s)
+			}
+		} catch {
+			case e:UnknownHostException =>
+		}
+		if (ip==null) {
+			ip = InetAddress.getByName(s)
+		}
+		new Host(name, ip)
+	}
+}
+
+case class Endpoint(host:Host, port:Int) {
+	override def toString:String = "%s:%d".format(host.toString, port)
 }
 
 object Endpoint {

@@ -18,7 +18,7 @@ trait ToField extends Field with EndpointField {
 	def reset(i:AccUnit) = new AccUnit(i.size, i.start, i.src, reset(i.dst), i.protocol)
 }
 trait HostField extends EndpointField {
-	def extract(i:Endpoint) = ""+i.host.getHostName()
+	def extract(i:Endpoint) = ""+i.host.toString
 	def reset(i:Endpoint) = new Endpoint(null, i.port)
 }
 trait PortField extends EndpointField {

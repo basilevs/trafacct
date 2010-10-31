@@ -23,8 +23,9 @@ val s = new Summator(d.process)
 println("Start date: "+start)
 
 for (parser <- Set(
-	new NetAcct.Dir(new File("/var/log/net-acct/")),
-	new SquidDir(new File("/var/log/squid3/"))
+	new NetAcct(open("/var/log/net-acct/net-acct.log.10.gz"))
+//	new NetAcct.Dir(new File("/var/log/net-acct/")),
+//	new SquidDir(new File("/var/log/squid3/"))
 		))
 {
 	parser.end = end

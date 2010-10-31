@@ -4,7 +4,6 @@ import FileOperations.{stringToURL, open}
 import scala.collection.mutable.Queue
 import java.io.{BufferedReader, File}
 import java.util.{Date}
-import java.net.InetAddress
 
 /*
 unix_time protocol_code src src_port dst dst_port size interface
@@ -26,7 +25,6 @@ class NetAcct(reader: BufferedReader) extends AccSource {
 }
 
 object NetAcct {
-	import Endpoint.hostToInetAddress
 	def parseEndPoint(host:String , port:String) = new Endpoint(host, port.toInt)
 	class Dir(dir:File) extends DirScanner(dir) {
 		fileFilter = x => x.getName.matches(".*net.*log(\\.\\d\\d?)?(\\.gz)?$")

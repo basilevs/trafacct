@@ -29,16 +29,6 @@ for (parser <- Set(
 {
 	parser.end = end
 	parser.start = start
-	s.sum(parser.filter(noBadHosts))
+	parser.filter(noBadHosts)
 }
 
-val data = s.toArray
-
-type AccResult = (AccUnit, Long)
-class Comparator(a:AccResult) extends Ordered[AccResult] {
-	def compare(that:AccResult) = lessCompare(a, that)
-	def lessCompare(a:AccResult, that:AccResult) = if (a._2 == that._2) 0 else if (a._2 < that._2) -1 else 1
-}
-scala.util.Sorting.quickSort(data)(d => new Comparator(d))
-
-data.slice(data.length-50).foreach(x => println(d.format(x._1), x._2))

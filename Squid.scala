@@ -16,9 +16,10 @@ class Squid(reader: BufferedReader) extends AccSource {
 			import NetAcct._
 			import DateTools._
 			import Endpoint._
+			import Squid._
 			val line = reader.readLine()
 			val fields = line.split("[ \t]+")
-			val url = new URL(fields(6))
+			var url:URL = parseUrl(fields(6))
 			val src = new Endpoint(url.getHost, url.getPort)
 			val size = fields(4).toInt
 			val dst = new Endpoint(fields(2), 0)
@@ -31,8 +32,24 @@ class Squid(reader: BufferedReader) extends AccSource {
 	}
 }
 
-class SquidDir(dir:File) extends DirScanner(dir) {
-	fileFilter = x => x.getName.matches(".*access.*log(\\.\\d\\d?)?(\\.gz)?$")
-	def open(u:URL): AccSource = new Squid(FileOperations.open(u))
+object Squid {
+	def parseUrl(s:String): URL = {
+		for (method <- Set(parseUrl1(_), parseUrl2(_))) {
+			try {
+				return method(s)
+			} catch {
+				case e:java.net.MalformedURLException =>
+			}
+		}
+		throw new ParseError("Unable to parse url: " + s, null)
+	}
+	
+	def parseUrl1(s:String) = new URL(s)
+	def parseUrl2(s:String) = new URL("http://"+s)
+	
+	class Dir(dir:File) extends DirScanner(dir) {
+		fileFilter = x => x.getName.matches(".*access.*log(\\.\\d\\d?)?(\\.gz)?$")
+		def open(u:URL): AccSource = new Squid(FileOperations.open(u))
+	}
 }
 
