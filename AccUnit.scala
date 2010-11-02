@@ -9,7 +9,7 @@ import java.util.regex.Pattern
 
 class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
 
-case class Host(name:String, ip:InetAddress) {
+case class Host(name:String, var ip:InetAddress) {
 	import Host.{addressToBytes, compareSeqs}
 	def comparejhgjhg(that: Host):Int = {
 		if (ip != null && that.ip != null) {

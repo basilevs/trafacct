@@ -1,34 +1,26 @@
 import java.net.{URL, InetAddress}
 import java.io.File
+import java.util.Date
 
 import trafacct._
-import FileOperations.{stringToURL, open}
-
+import FileOperations._
 import Manipulator._
+import Defaults._
 import DateTools._
 
-
-def hasHost(u:AccUnit, h:InetAddress) = u.src.host == h || u.dst.host == h
-def hasHosts(u:AccUnit, h:Set[InetAddress]) = h.contains(u.src.host) || h.contains(u.dst.host)
-val badHosts = Set(InetAddress.getByName("10.3.0.1"))
-def noBadHosts(u:AccUnit) = !hasHosts(u, badHosts)
-
-val end = dayStart(now)
-//val start = dayBefore(end)
-val start = null
-
-val d  = new AccDropper(genSeq(new Src, new Dst))
-val s = new Summator(d.process)
-
-println("Start date: "+start)
-
-for (parser <- Set(
-	new NetAcct.Dir(new File("/var/log/net-acct/")),
-	new SquidDir(new File("/var/log/squid3/"))
-		))
+var count = 0
+val start = new Date
+for (parser <- getSrcs)
 {
-	parser.end = end
-	parser.start = start
-	parser.filter(noBadHosts)
+//	for (i <- parser.elements.filter(x => true))
+//		count += 1
+	for (i <- parser)
+		count += 1
 }
+val end = new Date
 
+implicit def dateToDouble(d:Date) = d.getTime / 1000.
+
+val time = end - start
+val speed = count / time
+println("%d units. %f unit per second".format(count, speed))
