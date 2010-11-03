@@ -12,36 +12,39 @@ unix_time protocol_code src src_port dst dst_port size interface
 class Squid(reader: BufferedReader) extends AccSource {
 	def elements = new Iterator[AccUnit] {
 		def hasNext = reader.ready
-		def next = {
+		def next:AccUnit = {
 			import NetAcct._
 			import DateTools._
 			import Endpoint._
 			import Squid._
 			val line = reader.readLine()
+			if (line == null) 
+				return null
 			try {
-			val fields = line.split("[ \t]+")
-			var src:Endpoint = null
-			var prot:String = null
-			if (false) {
-				var url = parseUrl(fields(6))
-				if (url.getHost==null)
-					throw new ParseError("Malformed URI: "+url, null)
-				src = new Endpoint(url.getHost, url.getPort)
-				prot = url.getProtocol
-			}
-			val size = fields(4).toInt
-			val dst = new Endpoint(fields(2), 0)
-			val status=fields(3)
+				val fields = line.split("[ \t]+")
+				var src:Endpoint = null
+				var prot:String = null
+				if (false) {
+					var url = parseUrl(fields(6))
+					if (url.getHost==null)
+						throw new ParseError("Malformed URI: "+url, null)
+					src = new Endpoint(url.getHost, url.getPort)
+					prot = url.getProtocol
+				} else {
+				}
+				val size = fields(4).toInt
+				val dst = new Endpoint(fields(2), 0)
+				val status=fields(3)
 			
-			var cached=false
-			if (status.indexOf("HIT/") >= 0)
-				cached=true
-			new AccUnit(size, fields(0).toDouble, src, dst, prot)
+				var cached=false
+				if (status.indexOf("HIT/") >= 0)
+					cached=true
+				new AccUnit(size, fields(0).toDouble, src, dst, prot)
 			} catch {
 				case e:Exception => throw new ParseError("Unable to parse "+line, e)
 			}
 		}
-	}
+	}.filter(_ != null)
 }
 
 object Squid {
