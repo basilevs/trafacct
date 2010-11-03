@@ -38,9 +38,13 @@ object Host {
 		rv
 	}
 	implicit def strToBytes(s:String): Array[Byte] = {
-		for (sep <- separators)
-			if (sep.matcher(s).find())
-				return separatedStrToBytes(s, sep)
+		try {
+			for (sep <- separators)
+				if (sep.matcher(s).find())
+					return separatedStrToBytes(s, sep)
+		} catch {
+			case e:NumberFormatException =>
+		}
 		null
 	}
 	implicit def strToHost(s:String):Host = {
@@ -52,11 +56,10 @@ object Host {
 				ip = InetAddress.getByAddress(bytes)
 //				println( "parsed ip: "+s)
 			}
+			if (ip == null)
+				ip = InetAddress.getByName(s)
 		} catch {
 			case e:UnknownHostException =>
-		}
-		if (ip==null) {
-			ip = InetAddress.getByName(s)
 		}
 		new Host(name, ip)
 	}

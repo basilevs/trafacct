@@ -1,5 +1,5 @@
 package trafacct
-import java.net.URL
+import java.net.{URI, URL}
 import FileOperations.{stringToURL, open}
 import scala.collection.mutable.Queue
 import java.io.{BufferedReader, File}
@@ -18,16 +18,28 @@ class Squid(reader: BufferedReader) extends AccSource {
 			import Endpoint._
 			import Squid._
 			val line = reader.readLine()
+			try {
 			val fields = line.split("[ \t]+")
-			var url:URL = parseUrl(fields(6))
-			val src = new Endpoint(url.getHost, url.getPort)
+			var src:Endpoint = null
+			var prot:String = null
+			if (false) {
+				var url = parseUrl(fields(6))
+				if (url.getHost==null)
+					throw new ParseError("Malformed URI: "+url, null)
+				src = new Endpoint(url.getHost, url.getPort)
+				prot = url.getProtocol
+			}
 			val size = fields(4).toInt
 			val dst = new Endpoint(fields(2), 0)
 			val status=fields(3)
+			
 			var cached=false
 			if (status.indexOf("HIT/") >= 0)
 				cached=true
-			new AccUnit(size, fields(0).toDouble, src, dst, url.getProtocol)
+			new AccUnit(size, fields(0).toDouble, src, dst, prot)
+			} catch {
+				case e:Exception => throw new ParseError("Unable to parse "+line, e)
+			}
 		}
 	}
 }
