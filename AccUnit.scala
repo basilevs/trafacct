@@ -56,8 +56,8 @@ object Host {
 				ip = InetAddress.getByAddress(bytes)
 //				println( "parsed ip: "+s)
 			}
-			if (ip == null)
-				ip = InetAddress.getByName(s)
+//			if (ip == null)
+//				ip = InetAddress.getByName(s)
 		} catch {
 			case e:UnknownHostException =>
 		}
@@ -66,6 +66,7 @@ object Host {
 }
 
 case class Endpoint(host:Host, port:Int) {
+	assert(host!=null)
 	override def toString:String = "%s:%d".format(host.toString, port)
 }
 

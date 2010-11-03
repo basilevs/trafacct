@@ -8,9 +8,9 @@ import Manipulator._
 import DateTools._
 import Defaults._
 
-def hasHost(u:AccUnit, h:InetAddress) = u.src.host == h || u.dst.host == h
-def hasHosts(u:AccUnit, h:Set[InetAddress]) = h.contains(u.src.host) || h.contains(u.dst.host)
-val badHosts = Set(InetAddress.getByName("10.3.0.1"))
+def hasHost(u:AccUnit, h:Host) = u.src.host == h || u.dst.host == h
+def hasHosts(u:AccUnit, h:Set[Host]) = h.contains(u.src.host) || h.contains(u.dst.host)
+val badHosts = Set[Host]("10.3.0.1")
 def noBadHosts(u:AccUnit) = !hasHosts(u, badHosts)
 
 val end = dayStart(now)
