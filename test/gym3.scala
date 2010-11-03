@@ -6,7 +6,7 @@ import FileOperations.{stringToURL, open}
 
 import Manipulator._
 import DateTools._
-
+import Defaults._
 
 def hasHost(u:AccUnit, h:InetAddress) = u.src.host == h || u.dst.host == h
 def hasHosts(u:AccUnit, h:Set[InetAddress]) = h.contains(u.src.host) || h.contains(u.dst.host)
@@ -22,14 +22,11 @@ val s = new Summator(d.process)
 
 println("Start date: "+start)
 
-for (parser <- Set(
-	new NetAcct.Dir(new File("/var/log/net-acct/")),
-	new SquidDir(new File("/var/log/squid3/"))
-		))
+for (parser <- getSrcs)
 {
 	parser.end = end
 	parser.start = start
-	s.sum(parser.filter(noBadHosts))
+	s.sum(parser.elements.filter(noBadHosts))
 }
 
 val data = s.toArray
