@@ -33,25 +33,14 @@ interfaces(0)="eth4"
 
 import Manipulator._
 import DateTools._
+import Squid._
 
-val parser = new NetAcct.Dir(new File("/var/log/net-acct/"))
-
-parser.end = dayStart(now)
-//parser.start = dayBefore(parser.end)
-
-println("Start date: "+parser.start)
-val d = new AccDropper(genSeq(new Src, new Dst))
-val s = new Summator(d.process)
-s sum parser
-val data = s.toArray
-
-type AccResult = (AccUnit, Long)
-class Comparator(a:AccResult) extends Ordered[AccResult] {
-	def compare(that:AccResult) = lessCompare(a, that)
-	def lessCompare(a:AccResult, that:AccResult) = if (a._2 == that._2) 0 else if (a._2 < that._2) -1 else 1
+def tUrl(s:String) {
+	val url = parseUrl(s)
+	println ("%s => %s://%s:%d".format(s, url.protocol, url.host, url.port))
 }
-scala.util.Sorting.quickSort(data)(d => new Comparator(d))
-
-
-println("Parsed")
-data.slice(data.length-50).foreach(x => println(d.format(x._1), x._2))
+ 
+tUrl("www.update.microsoft.com:443")
+tUrl("http://www.update.microsoft.com/v9/windowsupdate/selfupdate/wuident.cab?")
+tUrl("https://www.update.microsoft.com")
+tUrl("ftp://buaka.com/fhdksdh")

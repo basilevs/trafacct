@@ -5,6 +5,7 @@ import scala.collection.mutable.Queue
 import java.io.{BufferedReader, File}
 import java.util.{Date}
 import java.net.InetAddress
+import java.util.regex.Pattern
 
 /*
 unix_time protocol_code src src_port dst dst_port size interface
@@ -24,14 +25,15 @@ class Squid(reader: BufferedReader) extends AccSource {
 				val fields = line.split("[ \t]+")
 				var src:Endpoint = null
 				var prot:String = null
-				if (false) {
-					var url = parseUrl(fields(6))
-					if (url.getHost==null)
-						throw new ParseError("Malformed URI: "+url, null)
-					src = new Endpoint(url.getHost, url.getPort)
-					prot = url.getProtocol
-				} else {
-				}
+				if (fields(6).length <= 2)
+					return null
+				if (fields(2) == "127.0.0.1")
+					return null
+				var url = FastURL.strToFastUrl(fields(6))
+				if (url.getHost==null)
+					throw new ParseError("Malformed URI: "+url, null)
+				src = new Endpoint(url.getHost, url.getPort)
+				prot = url.getProtocol
 				val size = fields(4).toInt
 				val dst = new Endpoint(fields(2), 0)
 				val status=fields(3)
@@ -47,8 +49,37 @@ class Squid(reader: BufferedReader) extends AccSource {
 	}.filter(_ != null)
 }
 
+case class FastURL(protocol:String, host:String, port:Int) {
+	def getHost = host
+	def getPort = port
+	def getProtocol = protocol
+	def setProtocol(p:String) = new FastURL(p, host, port)
+}
+object FastURL {
+	val urlRe = Pattern.compile("^(?:(\\w+)://)?([\\w\\d\\.]+)(?:(\\d+))?")
+	implicit def strToFastUrl(s:String) = {
+		val m = urlRe.matcher(s)
+		if (m.find()) {
+			var proto = m.group(1)		
+			var port:Int = 0
+			if (m.group(3) != null ) {
+				port = m.group(3).toInt 
+			} else {
+				port = proto match {
+					case "http" => 80
+					case "ftp" => 21
+					case "https" => 443
+					case null => 0
+				}
+			}
+			new FastURL(proto, m.group(2), port) 
+		} else {
+			throw new ParseError("Can't parse url: "+s, null)
+		}
+	}
+}
 object Squid {
-	def parseUrl(s:String): URL = {
+/*	def parseUrl(s:String): URL = {
 		for (method <- Set(parseUrl1(_), parseUrl2(_))) {
 			try {
 				return method(s)
@@ -61,7 +92,8 @@ object Squid {
 	
 	def parseUrl1(s:String) = new URL(s)
 	def parseUrl2(s:String) = new URL("http://"+s)
-	
+*/
+	def parseUrl(s:String): FastURL = FastURL.strToFastUrl(s)
 	class Dir(dir:File) extends DirScanner(dir) {
 		fileFilter = x => x.getName.matches(".*access.*log(\\.\\d\\d?)?(\\.gz)?$")
 		def open(u:URL): AccSource = new Squid(FileOperations.open(u))
