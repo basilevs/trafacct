@@ -9,9 +9,10 @@ class PrettyPrinter {
 			widthArray += 0
 		var rv=""
 		for (i <- 0 to input.length-1) {
-			val width = Math.max(widthArray(i), input(i).length+1)
+			val in = if (input(i) == null) "null" else input(i)
+			val width = Math.max(widthArray(i), in.length+1)
 			widthArray(i) = width
-			rv = rv + spaces(width - input(i).length) + input(i)
+			rv = rv + spaces(width - in.length) + in
 		}
 		rv
 	}
