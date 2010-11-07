@@ -11,3 +11,9 @@ class Summator[T](process: AccUnit => T) extends HashMap[T, Long] {
 		}
 	}
 }
+
+object Summator {
+	def compareBySecond[T](a:(T, Long), b:(T, Long)):Int = {
+		if (a._2 == b._2) 0 else if (a._2 < b._2) -1 else 1
+	}
+}

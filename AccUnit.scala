@@ -38,7 +38,7 @@ trait AccSource extends Iterable[AccUnit] {
 			return false
 		if (start != null && i.start.getTime < start.getTime)
 			return false
-		if (end != null && i.start.getTime >= start.getTime)
+		if (end != null && i.start.getTime >= end.getTime)
 			return false
 		if (skipHosts contains i.src.host)
 			return false
@@ -50,16 +50,20 @@ trait AccSource extends Iterable[AccUnit] {
 
 class AccSources(srcs:Iterable[AccSource]) extends AccSource {
 	def elements = new Iterator[AccUnit] {
+
 		var colIter = srcs.elements
-		var curIter = colIter.next.elements
+		var curIter:Iterator[AccUnit] = null
+//		println("AccSources: "+start)	
 		def next:AccUnit = {
 			var n:AccUnit = null
 			do {
 				if (curIter != null && curIter.hasNext)
 					return curIter.next
-				if (colIter.hasNext) 
-					curIter = colIter.next.elements
-				else
+				if (colIter.hasNext) {
+					var col = colIter.next
+					col.copySettings(AccSources.this)
+					curIter = col.elements
+				} else
 					return null
 			} while (true)
 			null
@@ -90,7 +94,9 @@ object DateTools {
 	}
 	def dayBefore(d:Date) = {
 		val cal = Calendar.getInstance()
+		cal.setTime(d)
 		cal.add(Calendar.DAY_OF_MONTH, -1)
+		println("Day before : %s -> %s".format(d, cal.getTime))
 		cal.getTime
 	}
 	implicit def timeStampToDate( unixTimeStamp: Double ) : Date = {

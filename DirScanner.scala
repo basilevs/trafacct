@@ -21,6 +21,7 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 		var fileIter = listFiles.elements
 		var accIter:Iterator[AccUnit] = null
 		var url:URL = null
+		println("DirScanner: %s - %s".format(start, end))
 		def next:AccUnit = {
 			do {
 				try {
@@ -34,7 +35,7 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 				val file = fileIter.next
 				url = file.toURL
 				val s = open( url )
-				s.start = start
+				s.copySettings(DirScanner.this)
 				accIter = s.elements
 				println(url)
 			} while (true)
