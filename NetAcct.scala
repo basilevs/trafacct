@@ -21,7 +21,7 @@ class NetAcct(reader: BufferedReader) extends AccSource {
 			val size:Long = fields(6).toLong
 			new AccUnit(size, date, from, to, fields(1))
 		}
-	}
+	}.filter(accept)
 }
 
 object NetAcct {

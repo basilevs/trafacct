@@ -41,5 +41,5 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 			null
 		}
 		def hasNext() = fileIter.hasNext || (accIter != null && accIter.hasNext)
-	}
+	}.filter(_ != null)
 }

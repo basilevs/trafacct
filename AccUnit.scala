@@ -9,62 +9,6 @@ import java.util.regex.Pattern
 
 class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
 
-case class Host(name:String, var ip:InetAddress) {
-	import Host.{addressToBytes, compareSeqs}
-	def comparejhgjhg(that: Host):Int = {
-		if (ip != null && that.ip != null) {
-			return compareSeqs(ip, that.ip)
-		}
-		name.compare(that.name)
-	}
-	override def toString:String = if (ip!=null) {ip.getHostName} else {name}
-}
-
-object Host {
-	implicit def addressToBytes(a:InetAddress):Array[Byte] = a.getAddress
-	def compareSeqs(a:Seq[Byte], b:Seq[Byte]):Int = {
-		val len = scala.Math.min(a.length, b.length)
-		for (i <- 0 until len)
-			if (a(i)!=b(i))
-				return a(i).compare(b(i))
-		a.length.compare(b.length)
-	}
-	implicit def stringToPattern(s:String): Pattern = Pattern.compile(s)
-	val separators = Seq[Pattern]("\\.", ":")
-	def separatedStrToBytes(s:String, separator:Pattern): Array[Byte] = {
-		val fields = separator.split(s)
-		var rv = new Array[Byte](fields.length);
-		fields.map(_.toInt.toByte).copyToArray(rv, 0)
-		rv
-	}
-	implicit def strToBytes(s:String): Array[Byte] = {
-		try {
-			for (sep <- separators)
-				if (sep.matcher(s).find())
-					return separatedStrToBytes(s, sep)
-		} catch {
-			case e:NumberFormatException =>
-		}
-		null
-	}
-	implicit def strToHost(s:String):Host = {
-		var name = s
-		var ip:InetAddress = null
-		try {
-			val bytes = strToBytes(s)
-			if (bytes != null) { 
-				ip = InetAddress.getByAddress(bytes)
-//				println( "parsed ip: "+s)
-			}
-//			if (ip == null)
-//				ip = InetAddress.getByName(s)
-		} catch {
-			case e:UnknownHostException =>
-		}
-		new Host(name, ip)
-	}
-}
-
 case class Endpoint(host:Host, port:Int) {
 	assert(host!=null)
 	override def toString:String = "%s:%d".format(host.toString, port)
@@ -81,13 +25,53 @@ object Endpoint {
 case class AccUnit(size: Long, start: Date, src:Endpoint, dst:Endpoint, protocol:String);
 
 trait AccSource extends Iterable[AccUnit] {
-	var start:Date =null
+	var start:Date = null
 	var end:Date = null
+	var skipHosts = Set[Host]()
+	def copySettings(i:AccSource) {
+		start=i.start
+		end=i.end
+		skipHosts=i.skipHosts
+	}
+	def accept(i:AccUnit): Boolean = {
+		if (i == null) 
+			return false
+		if (start != null && i.start.getTime < start.getTime)
+			return false
+		if (end != null && i.start.getTime >= start.getTime)
+			return false
+		if (skipHosts contains i.src.host)
+			return false
+		if (skipHosts contains i.dst.host)
+			return false
+		true
+	}
+}
+
+class AccSources(srcs:Iterable[AccSource]) extends AccSource {
+	def elements = new Iterator[AccUnit] {
+		var colIter = srcs.elements
+		var curIter = colIter.next.elements
+		def next:AccUnit = {
+			var n:AccUnit = null
+			do {
+				if (curIter != null && curIter.hasNext)
+					return curIter.next
+				if (colIter.hasNext) 
+					curIter = colIter.next.elements
+				else
+					return null
+			} while (true)
+			null
+		}
+		def hasNext = curIter!=null && curIter.hasNext || colIter.hasNext
+	}.filter(accept)
 }
 
 class AccSourceCached extends Queue[AccUnit] with AccSource {
 	def ++=(from: AccSource) = super.++=(from)
 }
+
 
 trait AccUnitProcessor[T] {
 	def process(i: AccUnit):T

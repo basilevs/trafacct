@@ -46,7 +46,7 @@ class Squid(reader: BufferedReader) extends AccSource {
 				case e:Exception => throw new ParseError("Unable to parse "+line, e)
 			}
 		}
-	}.filter(_ != null)
+	}.filter(accept)
 }
 
 case class FastURL(protocol:String, host:String, port:Int) {
@@ -56,7 +56,7 @@ case class FastURL(protocol:String, host:String, port:Int) {
 	def setProtocol(p:String) = new FastURL(p, host, port)
 }
 object FastURL {
-	val urlRe = Pattern.compile("^(?:(\\w+)://)?([\\w\\d\\.]+)(?:(\\d+))?")
+	val urlRe = Pattern.compile("^(?:(\\w+)://)?([\\w\\-\\d\\.]+)(?:(\\d+))?")
 	implicit def strToFastUrl(s:String) = {
 		val m = urlRe.matcher(s)
 		if (m.find()) {

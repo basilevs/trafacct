@@ -1,5 +1,6 @@
 import java.net.{URL, InetAddress}
 import java.io.File
+import java.lang.NullPointerException
 
 import trafacct._
 import FileOperations.{stringToURL, open}
@@ -11,7 +12,13 @@ import Defaults._
 def hasHost(u:AccUnit, h:Host) = u.src.host == h || u.dst.host == h
 def hasHosts(u:AccUnit, h:Set[Host]) = h.contains(u.src.host) || h.contains(u.dst.host)
 val badHosts = Set[Host]("10.3.0.1")
-def noBadHosts(u:AccUnit) = !hasHosts(u, badHosts)
+def noBadHosts(u:AccUnit) = {
+	try {
+		!hasHosts(u, badHosts)
+	} catch {
+		case e:NullPointerException => throw new ParseError(""+u, e)
+	}
+}
 
 val end = dayStart(now)
 //val start = dayBefore(end)
