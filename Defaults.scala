@@ -40,6 +40,7 @@ trait Args {
 	def configure(i:AccSource) {
 		i.start = start
 		i.end = end
+		i.skipHosts = skipHosts
 	}
 }
 
