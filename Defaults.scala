@@ -12,6 +12,7 @@ trait Args {
 	var start:Date = null
 	var end:Date = null
 	var limit = 50
+	var skipHosts = Set[Host]("10.3.0.1", "10.0.0.1")
 	def parse(args:Array[String]) = {
 		import DateTools._
 		val parser = new CmdLineParser
