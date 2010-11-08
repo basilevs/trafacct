@@ -2,6 +2,8 @@ package trafacct;
 import jargs.gnu.CmdLineParser
 import CmdLineParser.Option
 import java.util.Date
+import java.text.SimpleDateFormat
+import java.lang.IllegalArgumentException
 
 //import scala.collection.mutable.HashSet
 import java.io.File
@@ -36,7 +38,16 @@ trait Args {
 			return null
 		parseDate(optVal.toString)
 	}
-	def parseDate(s:String): Date = (if (s == null) null else new Date(s))
+	def parseDate(s:String): Date = {
+		val format = new SimpleDateFormat("yyyy-MM-dd")
+		if (s == null) null else  {
+			try {
+				format.parse(s)
+			}catch {
+				case e:IllegalArgumentException => throw new ParseError("Can't parse "+s, e)
+			}
+		}
+	}
 	def configure(i:AccSource) {
 		i.start = start
 		i.end = end
