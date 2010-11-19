@@ -22,7 +22,7 @@ object Endpoint {
 	}
 }
 
-case class AccUnit(size: Long, start: Date, src:Endpoint, dst:Endpoint, protocol:String);
+case class AccUnit(size: Long, start: Date, src:Endpoint, dst:Endpoint, protocol:String)
 
 trait AccSource extends Iterable[AccUnit] {
 	var start:Date = null
@@ -92,13 +92,18 @@ object DateTools {
 			cal.set(i, 0)
 		cal.getTime
 	}
-	def dayBefore(d:Date) = {
+	def addDays(d:Date, n:Int) = {
 		val cal = Calendar.getInstance()
 		cal.setTime(d)
-		cal.add(Calendar.DAY_OF_MONTH, -1)
-		println("Day before : %s -> %s".format(d, cal.getTime))
+		cal.add(Calendar.DAY_OF_MONTH, n)
 		cal.getTime
 	}
+	def dayBefore(d:Date) = {
+		val rv = addDays(d, -1)
+		println("Day before : %s -> %s".format(d, rv))
+		rv
+	}
+	def weekBefore(d:Date) = addDays(d, -7)
 	implicit def timeStampToDate( unixTimeStamp: Double ) : Date = {
 		// Unix timestamp is seconds past epoch
 		new Date((unixTimeStamp * 1000).toLong);

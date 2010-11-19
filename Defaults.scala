@@ -8,7 +8,6 @@ import java.lang.IllegalArgumentException
 //import scala.collection.mutable.HashSet
 import java.io.File
 
-import Summator._
 
 trait Args {
 	var start:Date = null
@@ -20,7 +19,9 @@ trait Args {
 		val parser = new CmdLineParser
 		val startOpt = parser.addStringOption('s', "start")
 		val endOpt = parser.addStringOption('e', "end")
+		val linesOpt = parser.addStringOption('l', "lines")
 		parser.parse(args)
+		limit = parser.getOptionValue(linesOpt, 50).asInstanceOf[Int]
 		start = parseDate(parser.getOptionValue(startOpt))
 		end = parseDate(parser.getOptionValue(endOpt))
 		var rem = Set[String]()
@@ -31,6 +32,9 @@ trait Args {
 		} else if (rem contains "yesterday") {
 			end = dayStart(now)
 			start = dayBefore(end)
+		} else if (rem contains "week") {
+			end = now
+			start = weekBefore(end)
 		}
 	}
 	def parseDate(optVal:AnyRef): Date = {
@@ -68,9 +72,6 @@ object Full {
 		def this(i:AccUnit) {this(i.src.host, i.dst.host, i.protocol)}
 	}
 	type AccResult = (Rule, Long)
-	case class Comparator(a:AccResult) extends Ordered[AccResult] {
-		def compare(that:AccResult) = compareBySecond(a, that)
-	}
 	val runner = new Configured {
 		def run = {
 			val s = new Summator[Rule]((x:AccUnit) => new Rule(x))
@@ -78,13 +79,37 @@ object Full {
 			configure(srcs)
 			s.sum(srcs)
 			val data = s.toArray
-			scala.util.Sorting.quickSort(data)(new Comparator(_))
+			println("Total units: "+data.length)
+			implicit def toOrdered(a:AccResult) = new SecondFieldOrdered(a)
+			scala.util.Sorting.quickSort(data)
 			val pp = new PrettyPrinter
 			def printAcc(i:AccResult) {
 				implicit def hostToStr(i:Host) = i.toString
 				println(pp.format(i._1.src, i._1.dst, i._1.protocol, i._2.toString))
 			}
 			data.slice(data.length-limit).foreach(printAcc)
+			0
+		}
+	}
+	def main(args:Array[String]) {
+		runner.main(args)
+	}
+}
+
+object NoSum {
+	val runner = new Configured {
+		def run = {
+			val srcs = new AccSources(Defaults.getSrcs)
+			configure(srcs)
+			val ab = new scala.collection.mutable.ArrayBuffer[(Host, Long)]
+			var count = 0
+			for (i <- srcs) {
+				ab+=(i.src.host, i.size)
+				ab.trimStart(ab.length-limit)
+				count += 1
+			}
+			ab.foreach(println)
+			println("Total units: "+count)
 			0
 		}
 	}

@@ -10,10 +10,10 @@ class Summator[T](process: AccUnit => T) extends HashMap[T, Long] {
 			put(key, getOrElseUpdate(key, 0) + u.size)
 		}
 	}
+	
 }
 
-object Summator {
-	def compareBySecond[T](a:(T, Long), b:(T, Long)):Int = {
-		if (a._2 == b._2) 0 else if (a._2 < b._2) -1 else 1
-	}
+class SecondFieldOrdered[T](a:(T, Long)) extends Ordered[(T, Long)] {
+	type Pair = (T, Long)
+	def compare(that:Pair) = if (a._2 == that._2) 0 else if (a._2 < that._2) -1 else 1
 }
