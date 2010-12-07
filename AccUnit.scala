@@ -28,10 +28,12 @@ trait AccSource extends Iterable[AccUnit] {
 	var start:Date = null
 	var end:Date = null
 	var skipHosts = Set[Host]()
+	var selectHosts:Set[Host] = null
 	def copySettings(i:AccSource) {
 		start=i.start
 		end=i.end
 		skipHosts=i.skipHosts
+		selectHosts=i.selectHosts
 	}
 	def accept(i:AccUnit): Boolean = {
 		if (i == null) 
@@ -44,6 +46,9 @@ trait AccSource extends Iterable[AccUnit] {
 			return false
 		if (skipHosts contains i.dst.host)
 			return false
+		if (selectHosts != null)
+			if (!selectHosts.contains(i.src.host) && !selectHosts.contains(i.dst.host))
+				return false
 		true
 	}
 }

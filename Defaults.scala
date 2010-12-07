@@ -15,14 +15,18 @@ trait Args {
 	var end:Date = null
 	var limit = 50
 	var skipHosts = Set[Host]("10.3.0.1", "10.0.0.1")
+	var selectHosts:Set[Host] = null
 	def parse(args:Array[String]) = {
 		import DateTools._
 		val parser = new CmdLineParser
 		val startOpt = parser.addStringOption('s', "start")
 		val endOpt = parser.addStringOption('e', "end")
+		val selectHostOpt = parser.addStringOption('h', "host")
 		parser.parse(args)
 		start = parseDate(parser.getOptionValue(startOpt))
 		end = parseDate(parser.getOptionValue(endOpt))
+		
+		while (parseHost(parser.getOptionValue(selectHostOpt))!=null) {}
 		var rem = Set[String]()
 		rem ++= parser.getRemainingArgs
 		if (rem contains "today") {
@@ -32,6 +36,19 @@ trait Args {
 			end = dayStart(now)
 			start = dayBefore(end)
 		}
+	}
+	def parseHost(optVal:AnyRef) : Host = {
+		if (optVal == null)
+			return null
+		val h = Host.strToHost(optVal.toString)
+		if (h == null)
+			return null
+		if (selectHosts == null) {
+			selectHosts = Set(h)
+		} else {
+			selectHosts += h
+		}
+		h
 	}
 	def parseDate(optVal:AnyRef): Date = {
 		if (optVal==null)
@@ -52,6 +69,7 @@ trait Args {
 		i.start = start
 		i.end = end
 		i.skipHosts = skipHosts
+		i.selectHosts = selectHosts
 	}
 }
 
@@ -92,6 +110,37 @@ object Full {
 		runner.main(args)
 	}
 }
+
+object Destination {
+	case class Rule(dst:Host, protocol:String) {
+		def this(i:AccUnit) {this(i.dst.host, i.protocol)}
+	}
+	type AccResult = (Rule, Long)
+	case class Comparator(a:AccResult) extends Ordered[AccResult] {
+		def compare(that:AccResult) = compareBySecond(a, that)
+	}
+	val runner = new Configured {
+		def run = {
+			val s = new Summator[Rule]((x:AccUnit) => new Rule(x))
+			val srcs = new AccSources(Defaults.getSrcs)
+			configure(srcs)
+			s.sum(srcs)
+			val data = s.toArray
+			scala.util.Sorting.quickSort(data)(new Comparator(_))
+			val pp = new PrettyPrinter
+			def printAcc(i:AccResult) {
+				implicit def hostToStr(i:Host) = i.toString
+				println(pp.format(i._1.dst, i._1.protocol, i._2.toString))
+			}
+			data.slice(data.length-limit).foreach(printAcc)
+			0
+		}
+	}
+	def main(args:Array[String]) {
+		runner.main(args)
+	}
+}
+
 
 object Defaults {
 
