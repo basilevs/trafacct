@@ -8,7 +8,7 @@ import java.lang.IllegalArgumentException
 //import scala.collection.mutable.HashSet
 import java.io.File
 
-import Summator._
+import Summator.compareBySecond
 
 trait Args {
 	var start:Date = null
@@ -110,6 +110,30 @@ object Full {
 		runner.main(args)
 	}
 }
+
+object NoSum {
+	val runner = new Configured {
+		def run = {
+			val srcs = new AccSources(Defaults.getSrcs)
+			configure(srcs)
+			val ab = new scala.collection.mutable.ArrayBuffer[(Host, Long)]
+			var count = 0
+			for (i <- srcs) {
+				ab+=(i.src.host, i.size)
+				ab.trimStart(ab.length-limit)
+				count += 1
+			}
+			ab.foreach(println)
+			println("Total units: "+count)
+			0
+		}
+	}
+	def main(args:Array[String]) {
+		runner.main(args)
+	}
+}
+
+
 
 object Destination {
 	case class Rule(dst:Host, protocol:String) {

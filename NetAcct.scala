@@ -10,9 +10,15 @@ unix_time protocol_code src src_port dst dst_port size interface
 */
 class NetAcct(reader: BufferedReader) extends AccSource {
 	def elements = new Iterator[AccUnit] {
-		def hasNext = reader.ready
-		def next = {
+		var reader = NetAcct.this.reader
+		def hasNext = if (reader == null) false else reader.ready
+		def next:AccUnit = {
+			assert(hasNext)
 			val line = reader.readLine()
+			if (line==null) {
+				reader = null
+				return null
+			}
 			val fields = line.split("[ \t]+");
 			import NetAcct._
 			val date = DateTools.timeStampToDate(fields(0).toDouble)
