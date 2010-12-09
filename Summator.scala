@@ -17,9 +17,3 @@ class SecondFieldOrdered[T](a:(T, Long)) extends Ordered[(T, Long)] {
 	type Pair = (T, Long)
 	def compare(that:Pair) = if (a._2 == that._2) 0 else if (a._2 < that._2) -1 else 1
 }
-
-object Summator {
-       def compareBySecond[T](a:(T, Long), b:(T, Long)):Int = {
-               if (a._2 == b._2) 0 else if (a._2 < b._2) -1 else 1
-       }
-}
