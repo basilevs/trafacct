@@ -35,6 +35,9 @@ trait Args {
 		} else if (rem contains "yesterday") {
 			end = dayStart(now)
 			start = dayBefore(end)
+		} else if (rem contains "week") {
+			end = now
+			start = weekBefore(end)
 		}
 	}
 	def parseHost(optVal:AnyRef) : Host = {
