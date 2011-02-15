@@ -3,7 +3,7 @@ import java.lang.{Exception, Throwable, NumberFormatException}
 import java.net.{InetAddress, UnknownHostException}
 import java.util.regex.Pattern
 
-case class Host(name:String, var ip:InetAddress) {
+case class Host(name:String, val ip:InetAddress) {
 	import Host.{addressToBytes, compareSeqs}
 	def compare(that: Host):Int = {
 		if (ip != null && that.ip != null) {
