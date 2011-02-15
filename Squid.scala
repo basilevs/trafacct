@@ -34,6 +34,8 @@ class Squid(reader: BufferedReader) extends AccSource {
 					throw new ParseError("Malformed URI: "+url, null)
 				src = new Endpoint(url.getHost, url.getPort)
 				prot = url.getProtocol
+				if (prot == null)
+					prot = fields(5)
 				val size = fields(4).toInt
 				val dst = new Endpoint(fields(2), 0)
 				val status=fields(3)
