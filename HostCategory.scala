@@ -56,9 +56,12 @@ case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory 
 	def this(address: String, maskLength: Int) = this(InetAddress.getByName(address), maskLength)
 	def this(address: InetAddress) = this(address, address.getAddress.length*8)
 	def contains(host: Host) = {
-		val rv = (mask & ip) == (mask & SubNet.addressToLong(host.ip))
-		// print(host.ip+{if(rv) " is from " else " is not from "}+toString+"\n")
-		rv
+		if (host.ip != null) {
+			val address = host.ip
+			(mask & ip) == (mask & SubNet.addressToLong(address))
+		} else {
+			false
+		}
 	}
 	override def toString = {
 		import SubNet.bytesToString
@@ -69,6 +72,20 @@ case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory 
 case class SingleHost(host: Host) extends HostCategory {
 	def contains(that: Host) = host == that
 	override def toString = host.toString
+}
+
+class Msecn extends IterableProxy[HostCategory] with HostCategory.Collection {
+	val subnets = Seq(
+		new SubNet("213.199.148.0", 24),
+		new SubNet("213.199.149.0", 24),
+		new SubNet("65.54.93.0", 24),
+		new SubNet("65.54.89.0", 24)
+	)
+	def self = subnets
+	val hash = subnets.hashCode
+	override def hashCode = hash
+	override def equals(that: Any) = that.isInstanceOf[Msecn]
+	override def toString = "*.msecn.net"
 }
 
 class Homenet extends IterableProxy[HostCategory] with HostCategory.Collection {
@@ -83,6 +100,18 @@ class Homenet extends IterableProxy[HostCategory] with HostCategory.Collection {
 	val hash = subnets.hashCode
 	override def hashCode = hash
 	override def equals(that: Any) = that.isInstanceOf[Homenet]
+}
+
+class Akamai extends IterableProxy[HostCategory] with HostCategory.Collection {
+	val subnets = Seq(
+		new SubNet("92.123.65.0", 24),
+		new SubNet("92.123.155.0", 24)
+	)
+	def self = subnets
+	override def toString = "*.akamaitechnologies.com"
+	val hash = subnets.hashCode
+	override def hashCode = hash
+	override def equals(that: Any) = that.isInstanceOf[Akamai]
 }
 
 class Nsu extends IterableProxy[HostCategory] with HostCategory.Collection {
