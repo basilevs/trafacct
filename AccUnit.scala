@@ -16,7 +16,7 @@ case class Endpoint(host:Host, port:Int) {
 
 object Endpoint {
 	implicit def hostToInetAddress(host:String) = InetAddress.getByName(host)
-	def parse(s:String) = {
+	implicit def parse(s:String) = {
 		val hostPort = s.split(":")
 		new Endpoint(hostPort(0), hostPort(1).toInt)
 	}
