@@ -5,13 +5,14 @@ import java.util.regex.Pattern
 
 case class Host(name:String, val ip:InetAddress) {
 	import Host.{addressToBytes, compareSeqs}
+	assert(name != null || ip != null)
 	def compare(that: Host):Int = {
 		if (ip != null && that.ip != null) {
 			return compareSeqs(ip, that.ip)
 		}
 		name.compare(that.name)
 	}
-	override def toString:String = if (ip!=null) {ip.getHostName} else {name}
+	override def toString:String = if (name == null) {ip.getHostName} else {name}
 }
 
 object Host {
@@ -42,16 +43,15 @@ object Host {
 		null
 	}
 	implicit def strToHost(s:String):Host = {
-		var name = s
+		var name = null
 		var ip:InetAddress = null
 		try {
 			val bytes = strToBytes(s)
 			if (bytes != null) { 
 				ip = InetAddress.getByAddress(bytes)
-//				println( "parsed ip: "+s)
+			} else {
+				name = s
 			}
-//			if (ip == null)
-//				ip = InetAddress.getByName(s)
 		} catch {
 			case e:UnknownHostException =>
 		}
