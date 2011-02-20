@@ -43,7 +43,7 @@ object Host {
 		null
 	}
 	implicit def strToHost(s:String):Host = {
-		var name = null
+		var name:String = null
 		var ip:InetAddress = null
 		try {
 			val bytes = strToBytes(s)
