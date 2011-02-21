@@ -5,12 +5,27 @@ import java.util.regex.Pattern
 
 case class Host(name:String, val ip:InetAddress) {
 	import Host.{addressToBytes, compareSeqs}
-	assert(name != null || ip != null)
+	if (name == null && ip == null)
+		throw new IllegalArgumentException("Both arguments are null")
 	def compare(that: Host):Int = {
 		if (ip != null && that.ip != null) {
-			return compareSeqs(ip, that.ip)
+			compareSeqs(ip, that.ip)
+		} else if (name != null && that.name != null) {
+			name.compare(that.name)
+		} else {
+			print ("Warning: slow comparison for " + this + " and " + that)
+			val a = if (this.ip == null) this.resolve else this
+			val b = if (that.ip == null) that.resolve else that
+			compareSeqs(ip, that.ip)
 		}
-		name.compare(that.name)
+	}
+	def resolve: Host = {
+		assert(name !=null || ip != null)
+		if (ip == null) {
+			new Host(name, InetAddress.getByName(name))
+		} else {
+			new Host(ip.getHostName, ip)
+		}
 	}
 	override def toString:String = if (name == null) {ip.getHostName} else {name}
 }
@@ -43,6 +58,7 @@ object Host {
 		null
 	}
 	implicit def strToHost(s:String):Host = {
+		assert(s!=null)
 		var name:String = null
 		var ip:InetAddress = null
 		try {
@@ -53,7 +69,7 @@ object Host {
 				name = s
 			}
 		} catch {
-			case e:UnknownHostException =>
+			case e:UnknownHostException => name = s
 		}
 		new Host(name, ip)
 	}
