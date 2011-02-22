@@ -43,7 +43,7 @@ trait Args {
 	def parseHost(optVal:AnyRef) : Host = {
 		if (optVal == null)
 			return null
-		val h = Host.strToHost(optVal.toString)
+		val h = Host.strToHost(optVal.toString).resolve
 		if (h == null)
 			return null
 		if (selectHosts == null) {
