@@ -7,7 +7,15 @@ case class Host(name:String, val ip:InetAddress) {
 	import Host.{addressToBytes, compareSeqs}
 	if (name == null && ip == null)
 		throw new IllegalArgumentException("Both arguments are null")
-//	override def equals(that: Any) = if (that==null) false else  that.asInstanceOf[Host].compare(this) == 0
+	override def equals(that: Any) = if (that==null) false else  that.asInstanceOf[Host].compare(this) == 0
+	override def hashCode = {
+		if (ip != null)
+			ip.hashCode
+		else if (name != null)
+			name.hashCode
+		else 
+			assert(false)
+	}
 	def compare(that: Host) = {
 		val rv = compare1(that)
 //		val res = if (rv == 0) "==" else if (rv < 0) "<" else ">"
