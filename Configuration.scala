@@ -17,7 +17,7 @@ trait Configuration {
 	var skipHosts = Set[Host]("10.3.0.1", "10.0.0.1")
 	var selectHosts:Set[Host] = null
 	var sources = Configuration.getSrcs
-	def parse(args:Array[String]) = {
+	def parse(args:Array[String]): Seq[String] = {
 		import DateTools._
 		val parser = new CmdLineParser
 		val startOpt = parser.addStringOption('s', "start")
@@ -28,18 +28,25 @@ trait Configuration {
 		end = parseDate(parser.getOptionValue(endOpt))
 		
 		while (parseHost(parser.getOptionValue(selectHostOpt))!=null) {}
-		var rem = Set[String]()
-		rem ++= parser.getRemainingArgs
-		if (rem contains "today") {
-			end = null
-			start = dayStart(now)
-		} else if (rem contains "yesterday") {
-			end = dayStart(now)
-			start = dayBefore(end)
-		} else if (rem contains "week") {
-			end = now
-			start = weekBefore(end)
+		var rem = Seq[String]()
+		for (arg <- parser.getRemainingArgs) {
+			arg match {
+				case "today" => {
+					end = null
+					start = dayStart(now)
+				}
+				case "yesterday" => {
+					end = dayStart(now)
+					start = dayBefore(end)
+				}
+				case "week" => {
+					end = now
+					start = weekBefore(end)
+				}
+				case _ => rem = rem ++ Seq(arg)
+			}
 		}
+		rem
 	}
 	def parseHost(optVal:AnyRef) : Host = {
 		if (optVal == null)
@@ -79,7 +86,12 @@ trait Configuration {
 
 trait Configured extends Configuration {
 	def main(args:Array[String]) = {
-		parse(args)
+		val rem = parse(args)
+		if (rem.length > 0) {
+			val strings = rem.map(_.toString)
+			val string = strings.reduceLeft(_ + "," + _)
+			throw new IllegalArgumentException("There were illegal arguments: "+string)
+		}
 		run
 	}
 	def run:Int
