@@ -14,7 +14,7 @@ case class Host(name:String, val ip:InetAddress) {
 		else if (name != null)
 			name.hashCode
 		else 
-			assert(false)
+			throw new IllegalArgumentException("Both name and ip are null")
 	}
 	def compare(that: Host) = {
 		val rv = compare1(that)

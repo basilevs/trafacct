@@ -13,7 +13,7 @@ import Summator.compareBySecond
 object NoSum {
 	val runner = new Configured {
 		def run = {
-			val srcs = new AccSources(Defaults.getSrcs)
+			val srcs = new AccSources(sources)
 			configure(srcs)
 			val ab = new scala.collection.mutable.ArrayBuffer[(Host, Long)]
 			var count = 0
@@ -45,7 +45,7 @@ object Destination {
 	val runner = new Configured {
 		def run = {
 			val s = new Summator[Rule]((x:AccUnit) => new Rule(x))
-			val srcs = new AccSources(Defaults.getSrcs)
+			val srcs = new AccSources(sources)
 			configure(srcs)
 			s.sum(srcs)
 			val data = s.toArray

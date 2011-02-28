@@ -12,7 +12,7 @@ object Categories {
 object ByCategory extends Configured {
 	def run = {
 		val s = new Summator[HostCategory.CategorizedAccUnit]((x:AccUnit) => Categories.categorization.process(x))
-		val srcs = new AccSources(Defaults.getSrcs)
+		val srcs = new AccSources(sources)
 		configure(srcs)
 		s.sum(srcs)
 		val pp = new PrettyPrinter

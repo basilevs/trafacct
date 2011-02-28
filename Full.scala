@@ -13,7 +13,7 @@ object Full extends Configured {
 	}
 	def run = {
 		val s = new Summator[Rule]((x:AccUnit) => new Rule(x))
-		val srcs = new AccSources(Defaults.getSrcs)
+		val srcs = new AccSources(sources)
 		configure(srcs)
 		s.sum(srcs)
 		implicit def toOrdered(a:AccResult) = new Comparator(a)
