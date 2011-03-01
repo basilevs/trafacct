@@ -3,10 +3,8 @@ import Summator.compareBySecond
 
 object Categories {
 	val categorization = new Categorization
-	categorization + Homenet + Msecn + Akamai + UpdateMicrosoftCom
-	categorization + new SubNet("10.51.0.0", 16) + new SubNet("10.33.0.0", 16) 
-	categorization + new SubNet("216.155.0.0", 16) +  new SubNet("209.222.23.0", 24)
-	categorization + new SubNet("192.168.0.0", 16)
+	categorization.preventCategorization + new SubNet("10.0.0.0", 24)
+	categorization + Homenet + Msecn + Akamai + UpdateMicrosoftCom +ChoopaCom + Nsu + Google
 }
 
 trait ByHostCategory extends Configured {

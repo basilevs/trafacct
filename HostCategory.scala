@@ -82,9 +82,7 @@ object Msecn extends IterableProxy[HostCategory] with HostCategory.Collection {
 		new SubNet("65.54.89.0", 24)
 	)
 	def self = subnets
-	val hash = subnets.hashCode
-	override def hashCode = hash
-	override def toString = "*.msecn.net"
+	override def toString = "mscen.net"
 }
 
 object UpdateMicrosoftCom extends IterableProxy[HostCategory] with HostCategory.Collection {
@@ -104,35 +102,52 @@ object Homenet extends IterableProxy[HostCategory] with HostCategory.Collection 
 	)
 	def self = subnets
 	override def toString = "HomeNet"
-	val hash = subnets.hashCode
-	override def hashCode = hash
 }
 
 object Akamai extends IterableProxy[HostCategory] with HostCategory.Collection {
 	val subnets = Seq(
 		new SubNet("92.123.65.0", 24),
-		new SubNet("92.123.155.0", 24)
+		new SubNet("92.123.155.0", 24),
+		new SubNet("95.100.0.0", 16),
+		new SubNet("95.101.0.0", 16)
 	)
 	def self = subnets
 	override def toString = "*.akamaitechnologies.com"
-	val hash = subnets.hashCode
-	override def hashCode = hash
 }
 
-class Nsu extends IterableProxy[HostCategory] with HostCategory.Collection {
+object Nsu extends IterableProxy[HostCategory] with HostCategory.Collection {
 	val subnets = Seq(
-		new SubNet("10.3.0.0", 16)
+		new SubNet("10.0.0.0", 12)
 	)
 	def self = subnets
 	override def toString = "NSU"
-	val hash = subnets.hashCode
-	override def hashCode = hash
+}
+
+object Google extends IterableProxy[HostCategory] with HostCategory.Collection {
+	val subnets = Seq(
+		new SubNet("74.125.0.0", 16),
+	)
+	def self = subnets
+	override def toString = "Google"
+}
+
+object ChoopaCom extends IterableProxy[HostCategory] with HostCategory.Collection {
+	val subnets = Seq(
+		new SubNet("216.155.128.0", 19),
+		new SubNet("209.222.0.0", 19),
+		new SubNet("64.237.32.0", 19),
+		new SubNet("66.55.128.0", 19)
+	)
+	def self = subnets
+	override def toString = "Choopa.com"
 }
 
 class Categorization extends HostCategory.List {
+	val preventCategorization = new HostCategory.List
 	override def getCategory(host: Host) = {
 		val c = super.getCategory(host)
-		if (c != null) {
+		val antiC = preventCategorization.getCategory(host)
+		if (c != null && antiC == null) {
 			c
 		} else {
 			val newHost = new SingleHost(host)
