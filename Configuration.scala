@@ -4,6 +4,9 @@ import CmdLineParser.Option
 import java.util.Date
 import java.text.SimpleDateFormat
 import java.lang.IllegalArgumentException
+import scala.xml.NodeSeq
+import scala.collection.jcl.Conversions._
+
 
 //import scala.collection.mutable.HashSet
 import java.io.File
@@ -11,6 +14,7 @@ import java.io.File
 import Summator.compareBySecond
 
 trait Configuration {
+	import Configuration._
 	var start:Date = null
 	var end:Date = null
 	var limit = 50
@@ -20,14 +24,27 @@ trait Configuration {
 	def parse(args:Array[String]): Seq[String] = {
 		import DateTools._
 		val parser = new CmdLineParser
-		val startOpt = parser.addStringOption('s', "start")
-		val endOpt = parser.addStringOption('e', "end")
-		val selectHostOpt = parser.addStringOption('h', "host")
+		val startOpt = parser.addOption(new DateOption('s', "start"))
+		val endOpt = parser.addOption(new DateOption('e', "end"))
+		val dateOpt = parser.addOption(new DateOption('d', "date"))
+		val selectHostOpt = parser.addOption(new HostOption('h', "host"))
 		parser.parse(args)
-		start = parseDate(parser.getOptionValue(startOpt))
-		end = parseDate(parser.getOptionValue(endOpt))
-		
-		while (parseHost(parser.getOptionValue(selectHostOpt))!=null) {}
+		var d = parser.getOptionValue(dateOpt).asInstanceOf[Date]
+		if (d != null) {
+			start = d
+			end = addDays(d, 1)
+		}
+		d = parser.getOptionValue(startOpt).asInstanceOf[Date]
+		if (d != null)
+			start = d
+		d = parser.getOptionValue(endOpt).asInstanceOf[Date]
+		if (d != null)
+			end = d
+		val hosts = parser.getOptionValues(selectHostOpt).map(_.asInstanceOf[Host])
+		if (hosts.length > 0) {
+			val was = if (selectHosts != null) selectHosts else Set[Host]()
+			selectHosts = was ++ Set[Host](hosts: _*)
+		}
 		var rem = Seq[String]()
 		for (arg <- parser.getRemainingArgs) {
 			arg match {
@@ -48,40 +65,23 @@ trait Configuration {
 		}
 		rem
 	}
-	def parseHost(optVal:AnyRef) : Host = {
-		if (optVal == null)
-			return null
-		val h = Host.strToHost(optVal.toString).resolve
-		if (h == null)
-			return null
-		if (selectHosts == null) {
-			selectHosts = Set(h)
-		} else {
-			selectHosts += h
-		}
-		h
-	}
-	def parseDate(optVal:AnyRef): Date = {
-		if (optVal==null)
-			return null
-		parseDate(optVal.toString)
-	}
-	def parseDate(s:String): Date = {
-		val format = new SimpleDateFormat("yyyy-MM-dd")
-		if (s == null) null else  {
-			try {
-				format.parse(s)
-			}catch {
-				case e:IllegalArgumentException => throw new ParseError("Can't parse "+s, e)
-			}
-		}
-	}
 	def configure(i:AccSource) {
 		i.start = start
 		i.end = end
 		i.skipHosts = skipHosts
 		i.selectHosts = selectHosts
 	}
+	def toXml =
+		<traffact:Configuration>
+			<start>{start}</start>
+			<end>{end}</end>
+			<skipHosts>
+				{hostsToXml(skipHosts)}
+			</skipHosts>
+			<selectHosts>
+				{hostsToXml(selectHosts)}
+			</selectHosts>
+		</traffact:Configuration>
 }
 
 trait Configured extends Configuration {
@@ -107,8 +107,50 @@ object Configuration {
 			rv+=new NetAcct.Dir(dir)
 		dir = new File("/var/log/squid3/")
 		if (dir.isDirectory)
-			rv+=new SquidDir(dir)
+			rv+=new Squid.Dir(dir)
 		rv
 	}
+	def parseHost(optVal:AnyRef) : Host = {
+		if (optVal == null)
+			return null
+		val h = Host.strToHost(optVal.toString).resolve
+		h
+	}
+	def parseDate(optVal:AnyRef): Date = {
+		if (optVal==null)
+			return null
+		parseDate(optVal.toString)
+	}
+	def parseDate(s:String): Date = {
+		val format = new SimpleDateFormat("yyyy-MM-dd")
+		if (s == null) null else  {
+			try {
+				format.parse(s)
+			}catch {
+				case e:IllegalArgumentException => throw new ParseError("Can't parse "+s, e)
+			}
+		}
+	}
+	def hostToXml(host: Host) =
+		if (host.ip != null && host.name != null)
+			<host ip={host.ip.toString} name={host.name} />
+		else if (host.ip == null)
+			<host name={host.name} />
+		else if (host.name == null)
+			<host ip={host.ip.toString} />
+		else 
+			throw new RuntimeException("Both name and ip are null for host object")				
+			
+	def hostsToXml(hosts: Seq[Host]): NodeSeq  =
+		for (host <- hosts) yield
+			hostToXml(host)
+
+	def hostsToXml(hosts: Set[Host]): NodeSeq  = {
+		if (hosts!=null)
+			hostsToXml(hosts.toSeq)
+		else
+			hostsToXml(Seq[Host]())
+	}
+	implicit def vectorToSeq(v: java.util.Vector[AnyRef]): Seq[AnyRef] = v
 }
 

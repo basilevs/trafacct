@@ -103,11 +103,7 @@ object DateTools {
 		cal.add(Calendar.DAY_OF_MONTH, n)
 		cal.getTime
 	}
-	def dayBefore(d:Date) = {
-		val rv = addDays(d, -1)
-		println("Day before : %s -> %s".format(d, rv))
-		rv
-	}
+	def dayBefore(d:Date) = addDays(d, -1)
 	def weekBefore(d:Date) = addDays(d, -7)
 	implicit def timeStampToDate( unixTimeStamp: Double ) : Date = {
 		// Unix timestamp is seconds past epoch

@@ -25,7 +25,13 @@ class NetAcct(reader: BufferedReader) extends AccSource {
 			val from = parseEndPoint(fields(2), fields(3))
 			val to = parseEndPoint(fields(4), fields(5))
 			val size:Long = fields(6).toLong
-			new AccUnit(size, date, from, to, fields(1))
+			if (end != null && date.compareTo(end) > 0) {
+				// We are stopping reading too new files as there is no way to read older data futher in this new file
+				reader = null
+				null
+			} else {
+				new AccUnit(size, date, from, to, fields(1))
+			}
 		}
 	}.filter(accept)
 }
