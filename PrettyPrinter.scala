@@ -19,10 +19,18 @@ class PrettyPrinter {
 }
 
 object PrettyPrinter {
+	implicit def bytesToHumanReadable(l:Long) = longToHumanReadable(l, 1024, Seq("", "k", "M", "G"))
+	implicit def longToHumanReadable(l:Long, base:Int, names:Seq[String]):String  = {
+		var d = l.toDouble
+		for (name <- names) {
+			if (Math.abs(d/base) < 1.) {
+				return "%.1f".format(d)+name
+			}
+			d /= base
+		}
+		return l.toString
+	}
 	def spaces(len:Int):String = {
-		var rv = ""
-		while (rv.length < len)
-			rv+=" "
-		rv
+		" " * len
 	}
 }

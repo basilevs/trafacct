@@ -24,7 +24,6 @@ class Squid(reader: BufferedReader) extends AccSource {
 			try {
 				val fields = line.split("[ \t]+")
 				var src:Endpoint = null
-				var prot:String = null
 				if (fields(6).length <= 2)
 					return null
 				if (fields(2) == "127.0.0.1")
@@ -33,17 +32,17 @@ class Squid(reader: BufferedReader) extends AccSource {
 				if (url.getHost==null)
 					throw new ParseError("Malformed URI: "+url, null)
 				src = new Endpoint(url.getHost, url.getPort)
-				prot = url.getProtocol
+				var prot = url.getProtocol
 				if (prot == null)
 					prot = fields(5)
+
 				val size = fields(4).toInt
 				val dst = new Endpoint(fields(2), 0)
 				val status=fields(3)
 			
-				var cached=false
-				if (status.indexOf("HIT/") >= 0)
-					cached=true
-				new AccUnit(size, fields(0).toDouble, src, dst, prot)
+				val cached = status.indexOf("HIT/") >= 0
+				val protCached = prot + {if (cached) "C" else ""}
+				new AccUnit(size, fields(0).toDouble, src, dst, protCached)
 			} catch {
 				case e:Exception => throw new ParseError("Unable to parse "+line, e)
 			}

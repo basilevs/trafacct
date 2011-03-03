@@ -4,6 +4,7 @@ import scala.collection.mutable.{BufferProxy, ListBuffer}
 
 trait HostCategory {
 	def contains(host: Host): Boolean
+	def humanReadable = toString
 }
 
 object HostCategory {
@@ -87,9 +88,10 @@ case class Domain(suffix:String) {
 	}
 }
 
-case class SingleHost(host: Host) extends HostCategory {
+case class SingleHost(host:Host) extends HostCategory {
 	def contains(that: Host) = host == that
 	override def toString = host.toString
+	override def humanReadable = host.humanReadable
 }
 
 object Msecn extends IterableProxy[HostCategory] with HostCategory.Collection {
@@ -177,8 +179,7 @@ class Categorization extends HostCategory.List {
 		if (c != null && antiC == null) {
 			c
 		} else {
-			val newHost = new SingleHost(host)
-			newHost
+			new SingleHost(host)
 		}
 	}
 }

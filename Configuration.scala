@@ -22,14 +22,26 @@ trait Configuration {
 	var skipHosts = Set[Host](Seq[Host]("10.3.0.1", "10.0.0.1").map(rh): _*)
 	var selectHosts:Set[Host] = null
 	var sources = Configuration.getSrcs
+	var humanReadable = false
+
+	def formatBytes(bytes:Long): String =
+		if (humanReadable) 
+			PrettyPrinter.bytesToHumanReadable(bytes) 
+		else bytes.toString
+	def format(h:Host):String =
+		if (humanReadable) 
+			h.humanReadable
+		else h.toString
 	def parse(args:Array[String]): Seq[String] = {
 		import DateTools._
 		val parser = new CmdLineParser
 		val startOpt = parser.addOption(new DateOption('s', "start"))
 		val endOpt = parser.addOption(new DateOption('e', "end"))
 		val dateOpt = parser.addOption(new DateOption('d', "date"))
+		val humanReadableOption = parser.addBooleanOption('a', "human-readable")
 		val selectHostOpt = parser.addOption(new HostOption('h', "host"))
 		parser.parse(args)
+		humanReadable = parser.getOptionValue(humanReadableOption).asInstanceOf[Boolean]
 		var d = parser.getOptionValue(dateOpt).asInstanceOf[Date]
 		if (d != null) {
 			start = d

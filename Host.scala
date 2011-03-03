@@ -45,7 +45,14 @@ case class Host(name:String, val ip:InetAddress) {
 			this
 		}
 	}
-	override def toString:String = if (name == null) {ip.getHostName} else {name}
+	def humanReadable: String = 
+		if (name == null)
+			ip.getHostName
+		else name
+	override def toString:String = 
+		if (name == null)
+			Host.bytesToString(Host.addressToBytes(ip))
+		else name
 }
 
 object Host {

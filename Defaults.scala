@@ -11,18 +11,18 @@ import java.io.File
 import Summator.compareBySecond
 
 object NoSum {
+	implicit def hostToString(h:Host) = h.toString
+	implicit def longToString(l:Long) = l.toString
 	val runner = new Configured {
+		val pp = new PrettyPrinter
 		def run = {
 			val srcs = new AccSources(sources)
 			configure(srcs)
-			val ab = new scala.collection.mutable.ArrayBuffer[(Host, Long)]
 			var count = 0
 			for (i <- srcs) {
-				ab+=(i.src.host, i.size)
-				ab.trimStart(ab.length-limit)
+				print(pp.format(i.src.host, i.dst.host, i.protocol, i.size)+"\n")
 				count += 1
 			}
-			ab.foreach(println)
 			println("Total units: "+count)
 			0
 		}

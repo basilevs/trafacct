@@ -9,6 +9,10 @@ class Categories extends Categorization {
 
 trait ByHostCategory extends Configured {
 	def categorize(a:AccUnit): HostCategory
+	implicit def hostToStr(i:Host) = format(i)
+	implicit def catToStr(i:HostCategory) = 
+		if (humanReadable) i.humanReadable
+		else i.toString
 	def run = {
 		val s = new Summator[HostCategory]((x:AccUnit) => categorize(x))
 		val srcs =  new AccSources(sources)
@@ -16,9 +20,7 @@ trait ByHostCategory extends Configured {
 		s.sum(srcs)
 		val pp = new PrettyPrinter
 		def printAcc(i:(HostCategory, Long)) {
-			implicit def hostToStr(i:Host) = i.toString
-			implicit def catToStr(i:HostCategory) = i.toString
-			println(pp.format(i._1, i._2.toString))
+			println(pp.format(i._1, formatBytes(i._2)))
 		}
 		val data = s.sorted
 		data.slice(data.length-limit).foreach(printAcc)
@@ -30,6 +32,11 @@ object ByCategory extends Configured {
 	val categories = new Categories
 	case class CategorizedAccUnit(src:HostCategory, dst:HostCategory, protocol:String) 
 	implicit def hostsToCategory(h:Host) = categories.getCategory(h)
+//	import PrettyPrinter.bytesToHumanReadable
+	implicit def formatBytes1(l:Long) = formatBytes(l)
+	implicit def catToStr(i:HostCategory) = 
+		if (humanReadable) i.humanReadable
+		else i.toString
 	def process(u:AccUnit) = 
 		new CategorizedAccUnit(u.src.host, u.dst.host, u.protocol)
 	def run = {
@@ -39,9 +46,7 @@ object ByCategory extends Configured {
 		s.sum(srcs)
 		val pp = new PrettyPrinter
 		def printAcc(i:(CategorizedAccUnit, Long)) {
-			implicit def hostToStr(i:Host) = i.toString
-			implicit def catToStr(i:HostCategory) = i.toString
-			println(pp.format(i._1.src, i._1.dst, i._1.protocol, i._2.toString))
+			println(pp.format(i._1.src, i._1.dst, i._1.protocol, i._2))
 		}
 		val data = s.sorted
 		data.slice(data.length-limit).foreach(printAcc)
