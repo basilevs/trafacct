@@ -5,6 +5,7 @@ import java.util.regex.Pattern
 
 case class Host(name:String, val ip:InetAddress) {
 	import Host.{addressToBytes, compareSeqs}
+	val performSlowComparison = false
 	if (name == null && ip == null)
 		throw new IllegalArgumentException("Both arguments are null")
 	override def equals(that: Any) = if (that==null) false else  that.asInstanceOf[Host].compare(this) == 0
@@ -28,18 +29,20 @@ case class Host(name:String, val ip:InetAddress) {
 		} else if (name != null && that.name != null) {
 			name.compare(that.name)
 		} else {
-			print ("Warning: slow comparison for " + this + " and " + that)
-			val a = if (this.ip == null) this.resolve else this
-			val b = if (that.ip == null) that.resolve else that
-			compareSeqs(ip, that.ip)
+			if (this.ip == null)
+				-1
+			else 
+				1
 		}
 	}
 	def resolve: Host = {
 		assert(name !=null || ip != null)
 		if (ip == null) {
 			new Host(name, InetAddress.getByName(name))
-		} else {
+		} else if ( name == null) {
 			new Host(ip.getHostName, ip)
+		} else {
+			this
 		}
 	}
 	override def toString:String = if (name == null) {ip.getHostName} else {name}
@@ -61,6 +64,11 @@ object Host {
 		var rv = new Array[Byte](fields.length);
 		fields.map(_.toInt.toByte).copyToArray(rv, 0)
 		rv
+	}
+	def byteToLong(i :Byte) = if (i >= 0) {i.toLong} else {256L + i}
+	implicit def bytesToString(bytes: Seq[Byte]) = {
+		val separator = if (bytes.length == 6) "::" else "."
+		bytes.map(byteToLong(_).toString).reduceLeft(_+separator+_)
 	}
 	implicit def strToBytes(s:String): Array[Byte] = {
 		try {

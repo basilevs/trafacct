@@ -18,7 +18,8 @@ trait Configuration {
 	var start:Date = null
 	var end:Date = null
 	var limit = 50
-	var skipHosts = Set[Host]("10.3.0.1", "10.0.0.1")
+	def rh(host:Host) = host.resolve
+	var skipHosts = Set[Host](Seq[Host]("10.3.0.1", "10.0.0.1").map(rh): _*)
 	var selectHosts:Set[Host] = null
 	var sources = Configuration.getSrcs
 	def parse(args:Array[String]): Seq[String] = {

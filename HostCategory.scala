@@ -7,7 +7,6 @@ trait HostCategory {
 }
 
 object HostCategory {
-	case class CategorizedAccUnit (src:HostCategory, dst:HostCategory, protocol:String) 
 	trait Collection extends Iterable[HostCategory] with HostCategory {
 		def contains(host: Host) = !forall(! _.contains(host))
 		def getCategory(host: Host) = {
@@ -18,11 +17,6 @@ object HostCategory {
 				r.get
 			}
 		}
-		def process(unit: AccUnit) = {
-			val src = getCategory(unit.src.host)
-			val dst = getCategory(unit.dst.host)
-			new CategorizedAccUnit(src, dst, unit.protocol)
-		}
 	}
 	case class List extends BufferProxy[HostCategory] with Collection {
 		val b = new ListBuffer[HostCategory]
@@ -31,8 +25,7 @@ object HostCategory {
 }
 
 object SubNet {
-	def byteToLong(i :Byte) = if (i >= 0) {i.toLong} else {256L + i}
-	def bytesToLong(bytes: Seq[Byte]) = bytes.foldLeft(0L)((mask, byte) => (mask<<8)+byteToLong(byte))
+	def bytesToLong(bytes: Seq[Byte]) = bytes.foldLeft(0L)((mask, byte) => (mask<<8)+Host.byteToLong(byte))
 	implicit def addressToLong(address: InetAddress) = bytesToLong(address.getAddress)
 	def setBit(mask:Long, shift:Int) = mask | 1 << shift
 	def maskLengthToMask(length: Int, byteCount:Int) = {
@@ -43,9 +36,19 @@ object SubNet {
 		for (  i <- (count-1).until(-1, -1) )
 			yield ((input >> i*8) & 255).toByte
 	}
-	implicit def bytesToString(bytes: Seq[Byte]) = bytes.map(byteToLong(_).toString).reduceLeft(_+"."+_)
 	implicit def longToAddress(input:Long, count: Int) = InetAddress.getByAddress(longToBytes(input, count).toArray)
 	implicit def stringToAddress(input: String) = InetAddress.getByName(input)
+	def stringToAddressAndMaskLength(input:String) = {
+		try {
+			val pos = input.indexOf("/")
+			if (pos < 0)
+				throw new ParseError("No separator", null)
+			val length = input.substring(pos+1).toInt
+			(input.substring(0, pos), length)
+		} catch {
+			case e:Exception => throw new ParseError("Can't parse SubNet "+input, e)
+		}
+	}
 }
 
 case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory {
@@ -55,6 +58,8 @@ case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory 
 	def this(address: InetAddress, maskLength: Int) = this(address.getAddress, maskLength)
 	def this(address: String, maskLength: Int) = this(InetAddress.getByName(address), maskLength)
 	def this(address: InetAddress) = this(address, address.getAddress.length*8)
+	def this(input:(String, Int)) = this(input._1, input._2)
+	def this(subnet:String) = this(SubNet.stringToAddressAndMaskLength(subnet))
 	def contains(host: Host) = {
 		if (host.ip != null) {
 			val address = host.ip
@@ -64,8 +69,21 @@ case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory 
 		}
 	}
 	override def toString = {
-		import SubNet.bytesToString
+		import Host.bytesToString
 		SubNet.longToBytes(ip, byteCount) +"/"+ maskLength
+	}
+}
+
+case class Domain(suffix:String) {
+	def contains(host: Host) = {
+		if (host.name == null) {
+			false
+		} else {
+			host.name.endsWith(suffix)
+		}
+	}	
+	override def toString = {
+		"*"+suffix
 	}
 }
 
@@ -140,6 +158,15 @@ object ChoopaCom extends IterableProxy[HostCategory] with HostCategory.Collectio
 	)
 	def self = subnets
 	override def toString = "Choopa.com"
+}
+
+object Gym3 extends IterableProxy[HostCategory] with HostCategory.Collection {
+	val subnets = Seq(
+		new SubNet("10.3.0.0", 16),
+		new SubNet("10.10.0.0", 16)
+	)
+	def self = subnets
+	override def toString = "Gym3"
 }
 
 class Categorization extends HostCategory.List {

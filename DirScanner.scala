@@ -30,7 +30,7 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 					if (!fileIter.hasNext)
 						return null
 				} catch {
-					case e:Exception => throw new ParseError("Can't parse "+url, e)
+					case e:ParseError => throw new ParseError("Can't parse "+url, e)
 				}
 				val file = fileIter.next
 				url = file.toURL
