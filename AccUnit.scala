@@ -7,7 +7,9 @@ import scala.collection.Set
 import scala.runtime.RichByte
 import java.util.regex.Pattern
 
-class ParseError(message:String, reason:Throwable) extends Exception(message, reason)
+class ParseError(message:String, reason:Throwable) extends Exception(message, reason) {
+	def this(message:String) = this(message, null)
+}
 
 case class Endpoint(host:Host, port:Int) {
 	assert(host!=null)

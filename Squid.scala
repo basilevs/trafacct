@@ -95,7 +95,7 @@ object Squid {
 	def parseUrl2(s:String) = new URL("http://"+s)
 */
 	def parseUrl(s:String): FastURL = FastURL.strToFastUrl(s)
-	class Dir(dir:File) extends DirScanner(dir) {
+	case class Dir(dir:File) extends DirScanner(dir) {
 		fileFilter = x => x.getName.matches(".*access.*log(\\.\\d\\d?)?(\\.gz)?$")
 		def open(u:URL): AccSource = new Squid(FileOperations.open(u))
 	}

@@ -87,6 +87,17 @@ object Host {
 		}
 		null
 	}
+	def strToInetAddress(input:String) = {
+			val bytes = strToBytes(input)
+			if (bytes == null)
+				throw new ParseError("Is not an ip address: "+input)
+			bytes.length match {
+				case 4 =>
+				case 6 =>
+				case _ => throw new ParseError("Can't parse ip "+input)
+			}
+			InetAddress.getByAddress(bytes)
+	}
 	implicit def strToHost(s:String):Host = {
 		assert(s!=null)
 		var name:String = null
@@ -94,7 +105,7 @@ object Host {
 		try {
 			val bytes = strToBytes(s)
 			if (bytes != null) { 
-				ip = InetAddress.getByAddress(bytes)
+				ip = strToInetAddress(s)
 			} else {
 				name = s
 			}

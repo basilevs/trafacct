@@ -11,6 +11,7 @@ object Full extends Configured {
 		override def equals(that:Any) = compare(that.asInstanceOf[Comparator]) == 0
 		def compare(that:Comparator) = compareBySecond(a, that.a)
 	}
+	implicit def hostToStr(i:Host) = format(i)
 	def run = {
 		val s = new Summator[Rule]((x:AccUnit) => new Rule(x))
 		val srcs = new AccSources(sources)
@@ -21,8 +22,7 @@ object Full extends Configured {
 		scala.util.Sorting.quickSort(data)
 		val pp = new PrettyPrinter
 		def printAcc(i:AccResult) {
-			implicit def hostToStr(i:Host) = i.toString
-			println(pp.format(i._1.src, i._1.dst, i._1.protocol, i._2.toString))
+			println(pp.format(i._1.src, i._1.dst, i._1.protocol, formatBytes(i._2)))
 		}
 		data.slice(data.length-limit).foreach((c: Comparator) => printAcc(c.a))
 		0

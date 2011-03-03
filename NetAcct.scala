@@ -38,7 +38,7 @@ class NetAcct(reader: BufferedReader) extends AccSource {
 
 object NetAcct {
 	def parseEndPoint(host:String , port:String) = new Endpoint(host, port.toInt)
-	class Dir(dir:File) extends DirScanner(dir) {
+	case class Dir(dir:File) extends DirScanner(dir) {
 		fileFilter = x => x.getName.matches(".*net.*log(\\.\\d\\d?)?(\\.gz)?$")
 		def open(u:URL): AccSource = new NetAcct(FileOperations.open(u))
 	}
