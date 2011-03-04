@@ -3,6 +3,7 @@ import jargs.gnu.CmdLineParser
 import CmdLineParser.Option
 import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
+import java.io.File
 import java.lang.IllegalArgumentException
 import scala.collection.jcl.Conversions._
 
@@ -36,7 +37,19 @@ object CmdLine {
 		var configFileName = parser.getOptionValue(configOpt).asInstanceOf[String]
 		if (configFileName != null) {
 			Configuration.applyXML(c, scala.xml.XML.loadFile(configFileName))
+		} else {
+			for (file <- Seq(new File (new File (System.getProperty("user.home"), ".trafacct"), "config.xml"), new File("config.xml"))) {
+				try {
+					val f = scala.xml.XML.loadFile(file)
+					Configuration.applyXML(c, f)
+				} catch {
+					case e:java.io.FileNotFoundException => 
+				}
+			}
 		}
+		if (c.sources.size == 0)
+			c.sources = Configuration.getSrcs
+		
 		
 		c.humanReadable = parser.getOptionValue(humanReadableOption).asInstanceOf[Boolean]
 		var d = parser.getOptionValue(dateOpt).asInstanceOf[Date]

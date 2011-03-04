@@ -20,16 +20,6 @@ trait Configuration {
 	var selectHosts:Set[Host] = null
 	var sources = Set[AccSource]()
 	var humanReadable = false
-	for (fName <- Seq("config.xml")) {
-		try {
-			val f = scala.xml.XML.loadFile("config.xml")
-			Configuration.applyXML(this, f)
-		} catch {
-			case e:java.io.FileNotFoundException => 
-		}
-	}
-	if (sources.size == 0)
-		sources = Configuration.getSrcs
 	def formatBytes(bytes:Long): String =
 		if (humanReadable) 
 			PrettyPrinter.bytesToHumanReadable(bytes) 
