@@ -19,6 +19,16 @@ object HostCategory {
 			}
 		}
 	}
+	object Collection {
+		def apply(iterable:Iterable[HostCategory]) = {
+			new Collection with IterableProxy[HostCategory] {
+				val self = iterable
+			}
+		}
+		def empty = new Collection with IterableProxy[HostCategory] {
+			val self = Seq()
+		}
+	}
 	case class List extends BufferProxy[HostCategory] with Collection {
 		val b = new ListBuffer[HostCategory]
 		def self = b

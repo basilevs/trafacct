@@ -16,8 +16,8 @@ trait Configuration {
 	var end:Date = null
 	var limit = 50
 	def rh(host:Host) = host.resolve
-	var skipHosts = Set[Host]()
-	var selectHosts:Set[Host] = null
+	var skip:HostCategory.Collection = HostCategory.Collection.empty
+	var select:HostCategory.Collection = null
 	var sources = Set[AccSource]()
 	var humanReadable = false
 	def formatBytes(bytes:Long): String =
@@ -33,8 +33,8 @@ trait Configuration {
 	def configure(i:AccSource) {
 		i.start = start
 		i.end = end
-		i.skipHosts = skipHosts
-		i.selectHosts = selectHosts
+		i.skip = skip
+		i.select = select
 	}
 	
 	def toXml = {
@@ -42,12 +42,12 @@ trait Configuration {
 	<limit>{limit}</limit>
 	{if (start!=null) <start>{dateToString(start)}</start> else null}
 	{if (end!=null) <end>{dateToString(end)}</end> else null}
-	<skipHosts>
-		{hostsToXml(skipHosts)}
-	</skipHosts>
-	<selectHosts>
-		{hostsToXml(selectHosts)}
-	</selectHosts>
+	<skip>
+		{skip map categoryToXml}
+	</skip>
+	<select>
+		{select map categoryToXml}
+	</select>
 	<sources>
 		{for (s <- sources.toSeq) yield sourceToXml(s)}
 	</sources>
@@ -100,11 +100,11 @@ object Configuration {
 	}
 	def hostToXml(host: Host) =
 		if (host.ip != null && host.name != null)
-			<host ip={Host.bytesToString(host.ip.getAddress)} name={host.name} />
+			<Host ip={Host.bytesToString(host.ip.getAddress)} name={host.name} />
 		else if (host.name != null)
-			<host name={host.name} />
+			<Host name={host.name} />
 		else if (host.ip != null)
-			<host ip={host.ip.toString} />
+			<Host ip={host.ip.toString} />
 		else 
 			throw new RuntimeException("Both name and ip are null for host object")				
 	
@@ -137,6 +137,19 @@ object Configuration {
 			case e:ParseError => throw new ParseError("Can't parse hosts: "+xml, e)
 		}
 	}
+
+	def categoryToXml(c:HostCategory) = c match {
+		case s:SubNet => <SubNet value={s.toString}/>
+		case s:SingleHost => hostToXml(s.host)
+		case _ => <Category name={c.toString}/>
+	}
+
+	def xmlToCategory(xml:Node):HostCategory = xml match {
+		case <SubNet/> => new SubNet((xml \ "@value").text)
+		case <Host/> => new SingleHost(xmlToHost(xml))
+		case <Category/> => throw new UnsupportedOperationException("Named categories are not supported now: " + xml)
+	}
+
 	def sourceToXml(s:AccSource): Node = {
 		s match {
 			case NetAcct.Dir(f) => <NetAcctDir dir={f.toString}/>
@@ -168,8 +181,18 @@ object Configuration {
 						case <limit>{l}</limit> => c.limit = l.text.toInt
 						case <start>{s}</start> => c.start = parseDate(s.text)
 						case <end>{s}</end> => c.end = parseDate(s.text)
-						case <skipHosts>{hosts @ _*}</skipHosts> => c.skipHosts = c.skipHosts ++ xmlToHosts(hosts)
-						case <selectHosts>{hosts @ _*}</selectHosts> => c.selectHosts = {if (c.selectHosts == null) Set[Host]() else c.selectHosts} ++  xmlToHosts(hosts)
+						case <skip>{hosts @ _*}</skip> => c.skip = HostCategory.Collection(c.skip ++ hosts.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategory))
+						case <select>{hosts @ _*}</select> => {
+							val res = hosts.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategory)
+							if (c.select == null)
+								if (res.length > 0)
+									c.select =  HostCategory.Collection(res)
+								else 
+									null
+							else 
+								c.select =  HostCategory.Collection(c.select ++ res)
+						}
+								
 						case <sources>{sources @ _*}</sources> => for (source <- sources if (!source.isInstanceOf[SpecialNode])) {
 							c.sources = c.sources + xmlToSource(source)
 						}

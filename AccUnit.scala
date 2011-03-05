@@ -29,13 +29,13 @@ case class AccUnit(size: Long, start: Date, src:Endpoint, dst:Endpoint, protocol
 trait AccSource extends Iterable[AccUnit] {
 	var start:Date = null
 	var end:Date = null
-	var skipHosts = Set[Host]()
-	var selectHosts:Set[Host] = null
+	var skip:HostCategory = HostCategory.Collection.empty
+	var select:HostCategory = null
 	def copySettings(i:AccSource) {
-		start=i.start
-		end=i.end
-		skipHosts=i.skipHosts
-		selectHosts=i.selectHosts
+		start = i.start
+		end = i.end
+		skip = i.skip
+		select = i.select
 	}
 	def accept(i:AccUnit): Boolean = {
 		if (i == null) 
@@ -44,12 +44,12 @@ trait AccSource extends Iterable[AccUnit] {
 			return false
 		if (end != null && i.start.getTime >= end.getTime)
 			return false
-		if (skipHosts contains i.src.host)
+		if (skip contains i.src.host)
 			return false
-		if (skipHosts contains i.dst.host)
+		if (skip contains i.dst.host)
 			return false
-		if (selectHosts != null)
-			if (!selectHosts.contains(i.src.host) && !selectHosts.contains(i.dst.host))
+		if (select != null)
+			if (!select.contains(i.src.host) && !select.contains(i.dst.host))
 				return false
 		true
 	}

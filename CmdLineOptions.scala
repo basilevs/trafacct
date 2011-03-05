@@ -22,6 +22,28 @@ class HostOption(short:Char, long:String) extends Option(short, long, true) {
 	}
 }
 
+class HostCategoryOption(short:Char, long:String, categories:HostCategory.Collection) extends Option(short, long, true) {
+	def parseHost(arg:String):HostCategory = {
+		try {
+			return new SingleHost(Host.strToHost(arg))
+		} catch {
+			case e:ParseError => return null
+		}
+	}
+	override def parseValue(arg:String, locale:Locale):AnyRef = {
+		for (i <- categories) {
+			if (arg == i.toString)
+				return i
+		}
+		for (i <- Seq(parseHost _)) {
+			val category = i(arg)
+			if (category != null)
+				return category
+		}
+		throw new ParseError("Can't parse category "+arg)
+	}
+}
+
 object CmdLine {
 	def parse(c:Configuration, args:Array[String]): Seq[String] = {
 		import DateTools._
@@ -31,7 +53,7 @@ object CmdLine {
 		val endOpt = parser.addOption(new DateOption('e', "end"))
 		val dateOpt = parser.addOption(new DateOption('d', "date"))
 		val humanReadableOption = parser.addBooleanOption('a', "human-readable")
-		val selectHostOpt = parser.addOption(new HostOption('h', "host"))
+		val selectHostOpt = parser.addOption(new HostCategoryOption('h', "host", HostCategory.Collection.empty))
 		val dumpConfigOpt = parser.addBooleanOption("dump-configuration")
 		parser.parse(args)
 		var configFileName = parser.getOptionValue(configOpt).asInstanceOf[String]
@@ -63,10 +85,10 @@ object CmdLine {
 		d = parser.getOptionValue(endOpt).asInstanceOf[Date]
 		if (d != null)
 			c.end = d
-		val hosts = parser.getOptionValues(selectHostOpt).map(_.asInstanceOf[Host])
+		val hosts = parser.getOptionValues(selectHostOpt).map(_.asInstanceOf[HostCategory])
 		if (hosts.length > 0) {
-			val was = if (c.selectHosts != null) c.selectHosts else Set[Host]()
-			c.selectHosts = was ++ Set[Host](hosts: _*)
+			val was = if (c.select != null) c.select else HostCategory.Collection.empty
+			c.select = HostCategory.Collection(was ++ HostCategory.Collection(hosts))
 		}
 		var rem = Seq[String]()
 		for (arg <- parser.getRemainingArgs) {
