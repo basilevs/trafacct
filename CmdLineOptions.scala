@@ -54,11 +54,10 @@ object CmdLine {
 		val dateOpt = parser.addOption(new DateOption('d', "date"))
 		val humanReadableOption = parser.addBooleanOption('a', "human-readable")
 		val selectHostOpt = parser.addOption(new HostCategoryOption('h', "host", HostCategory.Collection.empty))
-		val dumpConfigOpt = parser.addBooleanOption("dump-configuration")
 		parser.parse(args)
-		var configFileName = parser.getOptionValue(configOpt).asInstanceOf[String]
-		if (configFileName != null) {
-			Configuration.applyXML(c, scala.xml.XML.loadFile(configFileName))
+		var configFileNames = parser.getOptionValues(configOpt).map(_.toString)
+		if (configFileNames.length > 0 ) {
+			configFileNames.foreach(Configuration.applyXML(c, scala.xml.XML.loadFile(_))
 		} else {
 			for (file <- Seq(new File (new File (System.getProperty("user.home"), ".trafacct"), "config.xml"), new File("config.xml"))) {
 				try {
@@ -87,8 +86,7 @@ object CmdLine {
 			c.end = d
 		val hosts = parser.getOptionValues(selectHostOpt).map(_.asInstanceOf[HostCategory])
 		if (hosts.length > 0) {
-			val was = if (c.select != null) c.select else HostCategory.Collection.empty
-			c.select = HostCategory.Collection(was ++ HostCategory.Collection(hosts))
+			c.select = HostCategory.Collection(hosts)
 		}
 		var rem = Seq[String]()
 		for (arg <- parser.getRemainingArgs) {
@@ -107,11 +105,6 @@ object CmdLine {
 				}
 				case _ => rem = rem ++ Seq(arg)
 			}
-		}
-		if (parser.getOptionValue(dumpConfigOpt).asInstanceOf[Boolean]) {
-			val pp = new scala.xml.PrettyPrinter(200, 2)
-			print(pp.format(c.toXml))
-			c.sources=Set()
 		}
 		rem
 	}

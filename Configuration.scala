@@ -46,7 +46,7 @@ trait Configuration {
 		{skip map categoryToXml}
 	</skip>
 	<select>
-		{select map categoryToXml}
+		{if (select != null) select map categoryToXml else null}
 	</select>
 	<sources>
 		{for (s <- sources.toSeq) yield sourceToXml(s)}
@@ -69,7 +69,11 @@ trait Configured extends Configuration {
 }
 
 
-object Configuration {
+object Configuration extends Configured {
+	def run = {
+		val pp = new scala.xml.PrettyPrinter(200, 2)
+		print(pp.format(toXml))
+	}
 	def getSrcs: Set[AccSource] = {
 		val rv = new scala.collection.mutable.HashSet[AccSource]
 	
@@ -139,7 +143,7 @@ object Configuration {
 	}
 
 	def categoryToXml(c:HostCategory) = c match {
-		case s:SubNet => <SubNet value={s.toString}/>
+		case s:SubNet => <SubNet ip={Host.bytesToString(SubNet.longToBytes(s.ip, s.byteCount))} maskLength={s.maskLength.toString}/>
 		case s:SingleHost => hostToXml(s.host)
 		case _ => <Category name={c.toString}/>
 	}

@@ -1,0 +1,109 @@
+trafacct toolset documentation
+
+INTRODUCTION
+There are many offline log analyzers out there. Most of those, however are to be used with only one corresponding traffic control  system - some parse squid logs, others process tcpdump output. This specializtion is easy to understand - a great amount of work is requried to consistently monitor all possible format variation and changes of a wide set of services. 
+Trafacct was developed to provide a common interface for abstract network service that manages input and output traffic. This allows user to monitor and classify all traffic passing through a host. Overall traffic statistics might help to collect statistics of different kinds, monitor bandwidth usage, implement an elaborate billing system or detect a viral activity in ones network. 
+As single developer can't provide every network activity log parser needed, users are encouraged to implement their own parsers to adapt toolset to their needs. 
+INSTALLATION
+On this early stage there are no installation packages or scripts for trafacct. The installation procedure follows:
+* ensure scala (of version >= 2.7) is installed
+* install JArgs http://jargs.sourceforge.net/ (this dependency will hopefully be eliminated in the future)
+* dowload an archive with trafacct sources from https://github.com/basilevs/trafacct
+* unpack
+* compile with scalac *.scala in decompressed trafacct directory
+
+CONFIGURATION
+Trafacct toolset reads its configuration from following locations:
+* command line -c key (accepts a path to an xml file)
+* ~/.trafacct/config.xml (not with -c key)
+* config.xml (from current working directory, not with -c key)
+* other command line switches
+
+Each location extends previously read configuration. All configuration lists are appended with new content, configuration values are overwritten. The only exception is <select> section of configuration files - it is dropped if the new configuration unit has a nonempty one.
+
+XML CONFIGURATION
+Example of configuration XML file can be found in doc/config.xml
+Trafacct configuration file has the following structure
+<configuration>
+  <limit>NUMBER</limit>
+  <skip>
+	CATEGORIES
+  </skip>
+  <select>
+	CATEGORIES
+  </select>
+  <sources>
+	SOURCES
+  </sources>
+</configuration>
+
+<limit>NUMBER</limit> - a limit for a number of statisticlines that 
+are printed to output by toolset components
+
+<skip> section enumerates hosts traffic to or from which is to be 
+dropped out of statistics
+<select> section enumerates hosts traffic to or or from which 
+should be processed by trafacct. If this section is empty all 
+traffic is processed and display in statistics (except skipped, see 
+<skip>)
+
+CATEGORIES - is a list of elements of following types:
+<Host name="domain_name" ip="numerical_ip"> - 	represents  a single 
+host, name or ip properties might be ommitted
+<SubNet ip="" maskLength=number> - selfexplanatory
+<Category name=""> - named category (not supported at the moment)
+
+<sources> - a main section of configuration file. Contains a 
+description of data sources to analyze. The following elements are 
+supported:
+<NetAcctDir dir="/var/log/net-acct"/> a path to logs of net-acct 
+daemon http://exorsus.net/projects/net-acct/ (now unavialable)
+<SquidDir dir="/var/log/net-acct"/> a path to squid logs now only 
+the default squid log format is supported: %ts.%03tu %6tr %>a 
+%Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
+
+Any number of sources might be present. Beware, that sources listed 
+more than once will be processed the same number of times giving the 
+correpsonding effect in statistic output.
+
+If you are processing a proxy logs be sure to <skip> traffic from 
+the proxy host itself as it would be accounted twice if you are 
+using gateway traffic logger.
+
+COMMAND LINE
+A toolset has a number of builtin statistic analyzing tools:
+
+* Configuration
+* ByCategory
+* BySourceCategory
+* ByDestinationCategory
+* Full
+
+Each of them might be run with the following command line:
+
+CLASSPATH=path_to_your_trafacct_folder scala trafacct.name_of_tool
+
+You may define required CLASSPATH enviroment variable in a user profile of your OS. In that case command reduces to:
+
+scala trafacct.name_of_tool
+
+COMMAND LINE SWITCHES
+To futher tune behaviour of trafacct without making changes to configuration files there are commnd line options. They should be appended to command line after tool name (see previous section).
+
+-c filename, --config filename - parses XML file with configuration. Is processed before any other command line options. May appear multiple times - each file mentioned will be parsed.
+
+-s START_DATE, --start START_DATE
+-e END_DATE, --end END_DATE
+Determines an interval of time to get statistics for. All log entries with timestamps older than START_DATE or newer than END_DATE will be dropped.
+Dates should be in the format : YYYY-MM-DD.
+
+-d DATE, --date DATE
+Equivalent to -s DATE -e DATE.
+
+-a, --human-readable - enables reverse DNS resolution and human readable numbers in output
+
+-h CATEGORY - selects a host category to be processed. All trafic that don't go to or from the host from to the category given will be dropped. May appear multilpe times - traffic from all categories will be accounted. A presence of this option makes toolset forget about categories selected by configuration files.
+CATEGORY might be in one the following formats:
+ddd.ddd.ddd.ddd/dd - a subnet
+ddd.ddd.ddd.ddd - a single host
+NAME_LITERAL - a named category (is not supported yet)

@@ -1,0 +1,13 @@
+<configuration>
+  <limit>50</limit>
+  <skip>
+    <Host name="10.3.0.1" ip="10.3.0.1"></Host>
+    <Host name="pebble.local" ip="10.0.0.1"></Host>
+    <Host name="pdebble.local" ip="10.5.0.1"></Host>
+  </skip>
+  <select> </select>
+  <sources>
+    <NetAcctDir dir="/var/log/net-acct"></NetAcctDir>
+    <SquidDir dir="/var/log/net-acct"></SquidDir>
+  </sources>
+</configuration>
