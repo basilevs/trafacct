@@ -56,8 +56,9 @@ object CmdLine {
 		val selectHostOpt = parser.addOption(new HostCategoryOption('h', "host", HostCategory.Collection.empty))
 		parser.parse(args)
 		var configFileNames = parser.getOptionValues(configOpt).map(_.toString)
+		def loadFile(fileName:String) {Configuration.applyXML(c, scala.xml.XML.loadFile(fileName))}
 		if (configFileNames.length > 0 ) {
-			configFileNames.foreach(Configuration.applyXML(c, scala.xml.XML.loadFile(_))
+			configFileNames.foreach(loadFile)
 		} else {
 			for (file <- Seq(new File (new File (System.getProperty("user.home"), ".trafacct"), "config.xml"), new File("config.xml"))) {
 				try {

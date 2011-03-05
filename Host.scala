@@ -4,7 +4,7 @@ import java.net.{InetAddress, UnknownHostException}
 import java.util.regex.Pattern
 
 case class Host(name:String, val ip:InetAddress) {
-	import Host.{addressToBytes, compareSeqs}
+	import Host.{addressToBytes, compareSeqs, bytesToString}
 	val performSlowComparison = false
 	if (name == null && ip == null)
 		throw new IllegalArgumentException("Both arguments are null")
@@ -45,13 +45,16 @@ case class Host(name:String, val ip:InetAddress) {
 			this
 		}
 	}
+	def ipString: String = bytesToString(addressToBytes(ip))
+	
 	def humanReadable: String = 
 		if (name == null)
 			ip.getHostName
 		else name
+		
 	override def toString:String = 
 		if (name == null)
-			Host.bytesToString(Host.addressToBytes(ip))
+			ipString
 		else name
 }
 

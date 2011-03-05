@@ -68,12 +68,15 @@ trait Configured extends Configuration {
 	def run:Int
 }
 
-
-object Configuration extends Configured {
+object DumpConfig  extends Configured {
 	def run = {
 		val pp = new scala.xml.PrettyPrinter(200, 2)
-		print(pp.format(toXml))
+		print(pp.format(toXml)+"\n")
+		0
 	}
+}
+
+object Configuration {
 	def getSrcs: Set[AccSource] = {
 		val rv = new scala.collection.mutable.HashSet[AccSource]
 	
@@ -104,11 +107,11 @@ object Configuration extends Configured {
 	}
 	def hostToXml(host: Host) =
 		if (host.ip != null && host.name != null)
-			<Host ip={Host.bytesToString(host.ip.getAddress)} name={host.name} />
+			<Host ip={host.ipString} name={host.name} />
 		else if (host.name != null)
 			<Host name={host.name} />
 		else if (host.ip != null)
-			<Host ip={host.ip.toString} />
+			<Host ip={host.ipString} />
 		else 
 			throw new RuntimeException("Both name and ip are null for host object")				
 	
@@ -149,7 +152,7 @@ object Configuration extends Configured {
 	}
 
 	def xmlToCategory(xml:Node):HostCategory = xml match {
-		case <SubNet/> => new SubNet((xml \ "@value").text)
+		case <SubNet/> => new SubNet((xml \ "@ip").text, (xml \ "@maskLength").text.toInt)
 		case <Host/> => new SingleHost(xmlToHost(xml))
 		case <Category/> => throw new UnsupportedOperationException("Named categories are not supported now: " + xml)
 	}

@@ -23,7 +23,7 @@ trait ByHostCategory extends Configured {
 			println(pp.format(i._1, formatBytes(i._2)))
 		}
 		val data = s.sorted
-		data.slice(data.length-limit).foreach(printAcc)
+		data.drop(data.length-limit).foreach(printAcc)
 		0
 	}
 }
@@ -49,7 +49,7 @@ object ByCategory extends Configured {
 			println(pp.format(i._1.src, i._1.dst, i._1.protocol, i._2))
 		}
 		val data = s.sorted
-		data.slice(data.length-limit).foreach(printAcc)
+		data.drop(data.length-limit).foreach(printAcc)
 		0
 	}
 }

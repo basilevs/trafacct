@@ -5,12 +5,16 @@ import scala.collection.mutable.{BufferProxy, ListBuffer}
 trait HostCategory {
 	def contains(host: Host): Boolean
 	def humanReadable = toString
+	def getCategory(host: Host):HostCategory = null // Returns a subcategory
 }
 
-object HostCategory {
+object HostCategory extends HostCategory {
+	val allCategories = new List
+	override def getCategory(host: Host) = allCategories.getCategory(host)
+	def contains(host:Host) = allCategories.contains(host)
 	trait Collection extends Iterable[HostCategory] with HostCategory {
 		def contains(host: Host) = !forall(! _.contains(host))
-		def getCategory(host: Host) = {
+		override def getCategory(host: Host) = {
 			val r =	find(_.contains(host))
 			if (r.isEmpty) {
 				null
@@ -29,7 +33,7 @@ object HostCategory {
 			val self = Seq()
 		}
 	}
-	case class List extends BufferProxy[HostCategory] with Collection {
+	class List extends BufferProxy[HostCategory] with Collection {
 		val b = new ListBuffer[HostCategory]
 		def self = b
 	}
@@ -155,7 +159,7 @@ object Nsu extends IterableProxy[HostCategory] with HostCategory.Collection {
 
 object Google extends IterableProxy[HostCategory] with HostCategory.Collection {
 	val subnets = Seq(
-		new SubNet("74.125.0.0", 16),
+		new SubNet("74.125.0.0", 16)
 	)
 	def self = subnets
 	override def toString = "Google"

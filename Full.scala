@@ -24,7 +24,7 @@ object Full extends Configured {
 		def printAcc(i:AccResult) {
 			println(pp.format(i._1.src, i._1.dst, i._1.protocol, formatBytes(i._2)))
 		}
-		data.slice(data.length-limit).foreach((c: Comparator) => printAcc(c.a))
+		data.drop(data.length-limit).foreach((c: Comparator) => printAcc(c.a))
 		0
 	}
 }

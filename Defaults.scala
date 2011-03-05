@@ -55,7 +55,7 @@ object Destination {
 				implicit def hostToStr(i:Host) = i.toString
 				println(pp.format(i._1.dst, i._1.protocol, i._2.toString))
 			}
-			data.slice(data.length-limit).foreach(printAcc)
+			data.drop(data.length-limit).foreach(printAcc)
 			0
 		}
 	}

@@ -73,17 +73,22 @@ using gateway traffic logger.
 COMMAND LINE
 A toolset has a number of builtin statistic analyzing tools:
 
-* Configuration
-* ByCategory
-* BySourceCategory
-* ByDestinationCategory
+* DumpConfig
+Dump XML configuration on standart output. All command switches effects are included. Helpful for generation of new configuration files.
 * Full
+For each uniq triplet of source, destination, protocol prints amount of traffic transferred.
+* ByCategory
+Like Full, but source and destination are replaced by host categories. Use it to reduce amount of output for traffic in you heavy loaded local subnet.
+* BySourceCategory
+ByCategory with destination distinction ommited
+* ByDestinationCategory
+ByCategory with source distinction ommited
 
-Each of them might be run with the following command line:
+Each of them can be run with the following command line:
 
 CLASSPATH=path_to_your_trafacct_folder scala trafacct.name_of_tool
 
-You may define required CLASSPATH enviroment variable in a user profile of your OS. In that case command reduces to:
+You may define required CLASSPATH enviroment variable in a user profile of your OS. If this is the case command reduces to:
 
 scala trafacct.name_of_tool
 
