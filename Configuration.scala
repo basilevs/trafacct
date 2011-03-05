@@ -42,6 +42,9 @@ trait Configuration {
 	<limit>{limit}</limit>
 	{if (start!=null) <start>{dateToString(start)}</start> else null}
 	{if (end!=null) <end>{dateToString(end)}</end> else null}
+	<categories>
+		{AllCategories.map(categoryDefinitionToXml)}
+	</categories>
 	<skip>
 		{skip map categoryToXml}
 	</skip>
@@ -77,6 +80,8 @@ object DumpConfig  extends Configured {
 }
 
 object Configuration {
+	implicit def intToString(i:Int) = i.toString
+	implicit def booleanToString(i:Boolean) = i.toString
 	def getSrcs: Set[AccSource] = {
 		val rv = new scala.collection.mutable.HashSet[AccSource]
 	
@@ -90,10 +95,12 @@ object Configuration {
 	}
 	val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
 	def parseDate(s:String): Date = {
-		if (s == null) null else  {
+		if (s == null) {
+			null
+		} else  {
 			try {
 				dateFormat.parse(s)
-			}catch {
+			} catch {
 				case e:IllegalArgumentException => throw new ParseError("Can't parse date "+s, e)
 			}
 		}
@@ -105,7 +112,7 @@ object Configuration {
 			dateFormat.format(date)
 		}
 	}
-	def hostToXml(host: Host) =
+	def hostToXml(host: Host) = {
 		if (host.ip != null && host.name != null)
 			<Host ip={host.ipString} name={host.name} />
 		else if (host.name != null)
@@ -114,6 +121,7 @@ object Configuration {
 			<Host ip={host.ipString} />
 		else 
 			throw new RuntimeException("Both name and ip are null for host object")				
+	}
 	
 	def xmlToHost(xml: NodeSeq): Host = {
 		try {
@@ -138,10 +146,33 @@ object Configuration {
 
 	def xmlToHosts(xml: NodeSeq): Seq[Host] = {
 		try {
-		for (host @ <host>{_*}</host> <- xml) yield
-			xmlToHost(host)
+			for (host @ <host>{_*}</host> <- xml) yield
+				xmlToHost(host)
 		} catch {
 			case e:ParseError => throw new ParseError("Can't parse hosts: "+xml, e)
+		}
+	}
+
+	def categoryDefinitionToXml(cd:HostCategory):Node = cd match {
+		case cd:HostCategory.Collection => <Category name={cd.toString} builtin={cd.isBuiltin}>{cd.map(categoryDefinitionToXml)}</Category>
+		case cd:SubNet => categoryToXml(cd)
+		case SingleHost(host) => categoryToXml(cd)
+		case _ => <Category name={cd.toString} builtin={cd.isBuiltin}/>
+	}
+
+	def xmlToCategoryDefinition(xml:Node):HostCategory = {
+//		print("xmlToCategoryDefinition(%s)\n".format(xml.toString))
+		xml match {
+			case <SubNet/> => xmlToCategory(xml)
+			case <Host/> => xmlToCategory(xml)
+			case <Category>{_*}</Category> => {
+				val name = (xml \ "@name").text
+				AllCategories.find(_.toString == name).getOrElse {
+					val rv = new HostCategory.Set(name)
+					(xml \ "_").filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategoryDefinition).foreach(rv+_)
+					rv
+				}
+			}
 		}
 	}
 
@@ -154,7 +185,17 @@ object Configuration {
 	def xmlToCategory(xml:Node):HostCategory = xml match {
 		case <SubNet/> => new SubNet((xml \ "@ip").text, (xml \ "@maskLength").text.toInt)
 		case <Host/> => new SingleHost(xmlToHost(xml))
-		case <Category/> => throw new UnsupportedOperationException("Named categories are not supported now: " + xml)
+		case <Category/> => {
+			val name = (xml \ "@name").text
+			try {
+				AllCategories.find(_.toString == name).get
+			} catch {
+				case e:java.util.NoSuchElementException => {
+					val allString = AllCategories.map(_.toString).reduceLeft(_+", "+_)
+					throw new ParseError("No collection named "+name+" was found. Known collections are: "+allString, e)
+				}
+			}
+		}
 	}
 
 	def sourceToXml(s:AccSource): Node = {
@@ -181,10 +222,15 @@ object Configuration {
 		if (sections.length <= 0)
 			throw new ParseError("No configuration section in XML: " + input)
 		*/
+		def nodeSeqToCategories(xml:NodeSeq):Seq[HostCategory] = xml match {
+			case <categories>{nodes @ _*}</categories> => nodes.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategoryDefinition)
+		}
+		{input \ "categories"}.flatMap(nodeSeqToCategories).foreach(AllCategories.register)
 		input match {
 			case <configuration>{nodes @ _*}</configuration> => {
 				for (node <- nodes) {
 					node match {
+						case <categories>{_*}</categories> => {}
 						case <limit>{l}</limit> => c.limit = l.text.toInt
 						case <start>{s}</start> => c.start = parseDate(s.text)
 						case <end>{s}</end> => c.end = parseDate(s.text)

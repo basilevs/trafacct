@@ -1,17 +1,15 @@
 package trafacct;
 import java.net.InetAddress
-import scala.collection.mutable.{BufferProxy, ListBuffer}
+import scala.collection.mutable.{BufferProxy, HashSet}
 
 trait HostCategory {
 	def contains(host: Host): Boolean
 	def humanReadable = toString
 	def getCategory(host: Host):HostCategory = null // Returns a subcategory
+	def isBuiltin = true
 }
 
-object HostCategory extends HostCategory {
-	val allCategories = new List
-	override def getCategory(host: Host) = allCategories.getCategory(host)
-	def contains(host:Host) = allCategories.contains(host)
+object HostCategory  {
 	trait Collection extends Iterable[HostCategory] with HostCategory {
 		def contains(host: Host) = !forall(! _.contains(host))
 		override def getCategory(host: Host) = {
@@ -33,10 +31,23 @@ object HostCategory extends HostCategory {
 			val self = Seq()
 		}
 	}
-	class List extends BufferProxy[HostCategory] with Collection {
-		val b = new ListBuffer[HostCategory]
-		def self = b
+	class Set(name:String) extends HashSet[HostCategory] with Collection	{
+		def this() = this(null)
+		override def isBuiltin = false
+		override def toString = if (name!= null) name else super.toString
 	}
+}
+
+object AllCategories extends IterableProxy[HostCategory] with HostCategory.Collection {
+	private val allCategories = new HostCategory.Set
+	val self = allCategories
+	def register(c:HostCategory) {
+		if (allCategories.find(_.toString == c.toString).isDefined)
+			return
+		allCategories + c
+	}
+	override def getCategory(host: Host) = allCategories.getCategory(host)
+	allCategories + Homenet + Akamai + NSU + Google + ChoopaCom + Gym3 + Msecn + UpdateMicrosoftCom
 }
 
 object SubNet {
@@ -67,8 +78,10 @@ object SubNet {
 }
 
 case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory {
+	import SubNet.longToBytes
+	import Host.bytesToString
 	val mask = SubNet.maskLengthToMask(maskLength, byteCount)
-	if ((ip & ~mask) != 0) throw new IllegalArgumentException("Subnet ip "+ip+"is not covered by its mask "+SubNet.longToBytes(mask, byteCount));
+	if ((ip & ~mask) != 0) throw new IllegalArgumentException("Subnet ip " + ip + "is not covered by its mask " + longToBytes(mask, byteCount));
 	def this(bytes: Seq[Byte], maskLength: Int) = this(SubNet.bytesToLong(bytes), maskLength, bytes.length)
 	def this(address: InetAddress, maskLength: Int) = this(address.getAddress, maskLength)
 	def this(address: String, maskLength: Int) = this(InetAddress.getByName(address), maskLength)
@@ -83,13 +96,14 @@ case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory 
 			false
 		}
 	}
+	def ipString = Host.bytesToString(longToBytes(ip, byteCount))
+	override def isBuiltin = false
 	override def toString = {
-		import Host.bytesToString
-		SubNet.longToBytes(ip, byteCount) +"/"+ maskLength
+		longToBytes(ip, byteCount) +"/"+ maskLength
 	}
 }
 
-case class Domain(suffix:String) {
+case class Domain(suffix:String) extends HostCategory {
 	def contains(host: Host) = {
 		if (host.name == null) {
 			false
@@ -100,12 +114,14 @@ case class Domain(suffix:String) {
 	override def toString = {
 		"*"+suffix
 	}
+	override def isBuiltin = false
 }
 
 case class SingleHost(host:Host) extends HostCategory {
 	def contains(that: Host) = host == that
 	override def toString = host.toString
 	override def humanReadable = host.humanReadable
+	override def isBuiltin = false
 }
 
 object Msecn extends IterableProxy[HostCategory] with HostCategory.Collection {
@@ -135,7 +151,7 @@ object Homenet extends IterableProxy[HostCategory] with HostCategory.Collection 
 		new SubNet("109.174.0.0", 16)
 	)
 	def self = subnets
-	override def toString = "HomeNet"
+	override def toString = "Homenet"
 }
 
 object Akamai extends IterableProxy[HostCategory] with HostCategory.Collection {
@@ -149,7 +165,7 @@ object Akamai extends IterableProxy[HostCategory] with HostCategory.Collection {
 	override def toString = "*.akamaitechnologies.com"
 }
 
-object Nsu extends IterableProxy[HostCategory] with HostCategory.Collection {
+object NSU extends IterableProxy[HostCategory] with HostCategory.Collection {
 	val subnets = Seq(
 		new SubNet("10.0.0.0", 12)
 	)
@@ -185,8 +201,8 @@ object Gym3 extends IterableProxy[HostCategory] with HostCategory.Collection {
 	override def toString = "Gym3"
 }
 
-class Categorization extends HostCategory.List {
-	val preventCategorization = new HostCategory.List
+class Categorization extends HostCategory.Set {
+	val preventCategorization = new HostCategory.Set
 	override def getCategory(host: Host) = {
 		val c = super.getCategory(host)
 		val antiC = preventCategorization.getCategory(host)

@@ -22,29 +22,43 @@ class HostOption(short:Char, long:String) extends Option(short, long, true) {
 	}
 }
 
-class HostCategoryOption(short:Char, long:String, categories:HostCategory.Collection) extends Option(short, long, true) {
+class HostCategoryOption(short:Char, long:String) extends Option(short, long, true) {
 	def parseHost(arg:String):HostCategory = {
 		try {
-			return new SingleHost(Host.strToHost(arg))
+			return new SingleHost(Host.strToHost(arg).resolve)
 		} catch {
 			case e:ParseError => return null
+			case e:java.net.UnknownHostException => return null
 		}
-	}
-	override def parseValue(arg:String, locale:Locale):AnyRef = {
-		for (i <- categories) {
-			if (arg == i.toString)
-				return i
-		}
-		for (i <- Seq(parseHost _)) {
-			val category = i(arg)
-			if (category != null)
-				return category
-		}
-		throw new ParseError("Can't parse category "+arg)
 	}
 }
 
 object CmdLine {
+	def parseHost(arg:String):HostCategory = {
+		try {
+			return new SingleHost(Host.strToHost(arg).resolve)
+		} catch {
+			case e:ParseError => return null
+			case e:java.net.UnknownHostException => return null
+		}
+	}
+	def searchInNamed(arg:String):HostCategory = {
+		for (i <- AllCategories) {
+			if (arg == i.toString)
+				return i
+		}
+		return null
+	}
+	def parseHostCategory(arg:String):HostCategory = {
+		for (i <- Seq(searchInNamed(_), parseHost(_))) {
+			val category = i(arg)
+			if (category != null)
+				return category
+		}
+		val allString = AllCategories.map(_.toString).reduceLeft(_+", "+_)
+		throw new ParseError("Can't parse host category "+arg+". Available named categories are: "+allString)
+	}
+
 	def parse(c:Configuration, args:Array[String]): Seq[String] = {
 		import DateTools._
 		val parser = new CmdLineParser
@@ -53,7 +67,7 @@ object CmdLine {
 		val endOpt = parser.addOption(new DateOption('e', "end"))
 		val dateOpt = parser.addOption(new DateOption('d', "date"))
 		val humanReadableOption = parser.addBooleanOption('a', "human-readable")
-		val selectHostOpt = parser.addOption(new HostCategoryOption('h', "host", HostCategory.Collection.empty))
+		val selectHostOpt = parser.addStringOption('h', "host")
 		parser.parse(args)
 		var configFileNames = parser.getOptionValues(configOpt).map(_.toString)
 		def loadFile(fileName:String) {Configuration.applyXML(c, scala.xml.XML.loadFile(fileName))}
@@ -85,9 +99,9 @@ object CmdLine {
 		d = parser.getOptionValue(endOpt).asInstanceOf[Date]
 		if (d != null)
 			c.end = d
-		val hosts = parser.getOptionValues(selectHostOpt).map(_.asInstanceOf[HostCategory])
+		val hosts = parser.getOptionValues(selectHostOpt).map(_.asInstanceOf[String])
 		if (hosts.length > 0) {
-			c.select = HostCategory.Collection(hosts)
+			c.select = HostCategory.Collection(hosts.map(parseHostCategory))
 		}
 		var rem = Seq[String]()
 		for (arg <- parser.getRemainingArgs) {

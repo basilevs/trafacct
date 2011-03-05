@@ -4,7 +4,7 @@ import Summator.compareBySecond
 
 class Categories extends Categorization {
 	preventCategorization + new SubNet("10.0.0.0", 24) + Gym3
-	this + Homenet + Msecn + Akamai + UpdateMicrosoftCom +ChoopaCom + Nsu + Google
+	this + Homenet + Msecn + Akamai + UpdateMicrosoftCom + ChoopaCom + Nsu + Google
 }
 
 trait ByHostCategory extends Configured {

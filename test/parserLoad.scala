@@ -5,8 +5,6 @@ import java.util.Date
 import trafacct._
 import FileOperations._
 import Manipulator._
-import Defaults._
-import DateTools._
 
 var count = 0
 val start = new Date

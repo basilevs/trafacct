@@ -26,6 +26,9 @@ Example of configuration XML file can be found in doc/config.xml
 Trafacct configuration file has the following structure
 <configuration>
   <limit>NUMBER</limit>
+  <categories>
+	NAMED_CATEGORIES
+  </categories>
   <skip>
 	CATEGORIES
   </skip>
@@ -42,6 +45,7 @@ are printed to output by toolset components
 
 <skip> section enumerates hosts traffic to or from which is to be 
 dropped out of statistics
+
 <select> section enumerates hosts traffic to or or from which 
 should be processed by trafacct. If this section is empty all 
 traffic is processed and display in statistics (except skipped, see 
@@ -51,7 +55,13 @@ CATEGORIES - is a list of elements of following types:
 <Host name="domain_name" ip="numerical_ip"> - 	represents  a single 
 host, name or ip properties might be ommitted
 <SubNet ip="" maskLength=number> - selfexplanatory
-<Category name=""> - named category (not supported at the moment)
+<Category name=""> - named category
+
+NAMED_CATEGORIES - a list of category definitions:
+<Category name="">
+	CATEGORIES
+</Category>
+Category collections assigned a name this way may be used in <select> and <skip> sections and also in category definitions below (order is important here)
 
 <sources> - a main section of configuration file. Contains a 
 description of data sources to analyze. The following elements are 
@@ -111,4 +121,4 @@ Equivalent to -s DATE -e DATE.
 CATEGORY might be in one the following formats:
 ddd.ddd.ddd.ddd/dd - a subnet
 ddd.ddd.ddd.ddd - a single host
-NAME_LITERAL - a named category (is not supported yet)
+NAME_LITERAL - a name of named category
