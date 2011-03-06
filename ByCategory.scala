@@ -1,12 +1,6 @@
 package trafacct;
 import Summator.compareBySecond
 
-
-class Categories extends Categorization {
-	preventCategorization + new SubNet("10.0.0.0", 24) + Gym3
-	this + Homenet + Msecn + Akamai + UpdateMicrosoftCom + ChoopaCom + Nsu + Google
-}
-
 trait ByHostCategory extends Configured {
 	def categorize(a:AccUnit): HostCategory
 	implicit def hostToStr(i:Host) = format(i)
@@ -29,9 +23,8 @@ trait ByHostCategory extends Configured {
 }
 
 object ByCategory extends Configured {
-	val categories = new Categories
 	case class CategorizedAccUnit(src:HostCategory, dst:HostCategory, protocol:String) 
-	implicit def hostsToCategory(h:Host) = categories.getCategory(h)
+	implicit def hostsToCategory(h:Host) = active.getCategory(h)
 //	import PrettyPrinter.bytesToHumanReadable
 	implicit def formatBytes1(l:Long) = formatBytes(l)
 	implicit def catToStr(i:HostCategory) = 
@@ -55,11 +48,9 @@ object ByCategory extends Configured {
 }
 
 object BySourceCategory extends ByHostCategory {
-	val categories = new Categories
-	def categorize(x:AccUnit) = categories.getCategory(x.src.host)
+	def categorize(x:AccUnit) = active.getCategory(x.src.host)
 }
 
 object ByDestinationCategory extends ByHostCategory {
-	val categories = new Categories
-	def categorize(x:AccUnit) = categories.getCategory(x.dst.host)
+	def categorize(x:AccUnit) = active.getCategory(x.dst.host)
 }

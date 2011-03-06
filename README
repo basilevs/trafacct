@@ -34,6 +34,9 @@ Trafacct configuration file has the following structure
   <categories>
 	NAMED_CATEGORIES
   </categories>
+  <activeCategories>
+	CATEGORIES
+  </activeCategories>
   <skip>
 	CATEGORIES
   </skip>
@@ -56,6 +59,9 @@ should be processed by trafacct. If this section is empty all
 traffic is processed and display in statistics (except skipped, see 
 <skip>)
 
+<activeCategories> enlists a set of named categories that should be use by By*Category tools. If this section is empty, all named categories are used. A category is refernced here is the following form: <Category name="name_of_category"/> (see NAMED_CATEGORIES). A name of categories will be used in tool output to represent destination or source of traffic.
+
+
 CATEGORIES - is a list of elements of following types:
 <Host name="domain_name" ip="numerical_ip"> - 	represents  a single 
 host, name or ip properties might be ommitted
@@ -63,27 +69,19 @@ host, name or ip properties might be ommitted
 <Category name=""> - named category
 
 NAMED_CATEGORIES - a list of category definitions:
-<Category name="">
+<Category name="name_of_category_being_defined">
 	CATEGORIES
 </Category>
-Category collections assigned a name this way may be used in <select> and <skip> sections and also in category definitions below (order is important here)
+Category collections assigned a name (replace name_of_category_being_defined with any suitable string)this way may be used in <select>, <skip> and <activeCategories> sections and also in other category definitions below (order is important here).
 
-<sources> - a main section of configuration file. Contains a 
-description of data sources to analyze. The following elements are 
-supported:
-<NetAcctDir dir="/var/log/net-acct"/> a path to logs of net-acct 
-daemon http://exorsus.net/projects/net-acct/ (now unavialable)
-<SquidDir dir="/var/log/net-acct"/> a path to squid logs now only 
-the default squid log format is supported: %ts.%03tu %6tr %>a 
-%Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
+<sources> - a main section of configuration file. Contains a description of data sources to analyze. The following elements are supported: <NetAcctDir dir="/var/log/net-acct"/> a path to logs of net-acct daemon http://exorsus.net/projects/net-acct/ (now unavialable)
+<SquidDir dir="/var/log/net-acct"/> a path to squid logs now only the default squid log format is supported: %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
 
-Any number of sources might be present. Beware, that sources listed 
-more than once will be processed the same number of times giving the 
-correpsonding effect in statistic output.
+Any number of sources might be present. Beware, that sources listed more than once will be processed the same number of times making the corresponding effect in statistic output. If no sources if given by configuration files, a simple detection mehanism is used to initialize this list. Use DumpConfig tool to see results.
 
-If you are processing a proxy logs be sure to <skip> traffic from 
-the proxy host itself as it would be accounted twice if you are 
-using gateway traffic logger.
+Any number of sources might be present. Beware, that sources listed more than once will be processed the same number of times making the corresponding effect in statistic output. If no sources if given by configuration files, a simple detection mehanism is used to initialize this list. Use DumpConfig tool to see results.
+
+If you are processing a proxy logs be sure to <skip> traffic to the proxy host itself as it would be accounted twice if you are using gateway traffic logger.
 
 COMMAND LINE
 A toolset has a number of builtin statistic analyzing tools:

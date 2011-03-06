@@ -18,6 +18,7 @@ trait Configuration {
 	def rh(host:Host) = host.resolve
 	var skip:HostCategory.Collection = HostCategory.Collection.empty
 	var select:HostCategory.Collection = null
+	var active:HostCategory.Collection = HostCategory.Collection.empty
 	var sources = Set[AccSource]()
 	var humanReadable = false
 	def formatBytes(bytes:Long): String =
@@ -45,6 +46,9 @@ trait Configuration {
 	<categories>
 		{AllCategories.map(categoryDefinitionToXml)}
 	</categories>
+	<activeCategories>
+		{active.map(categoryToXml)}
+	</activeCategories>
 	<skip>
 		{skip map categoryToXml}
 	</skip>
@@ -230,6 +234,10 @@ object Configuration {
 			case <configuration>{nodes @ _*}</configuration> => {
 				for (node <- nodes) {
 					node match {
+						case <activeCategories>{categories @ _*}</activeCategories> => {
+							val data = categories.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategory)
+							c.active = HostCategory.Collection(c.active ++ data)
+						}
 						case <categories>{_*}</categories> => {}
 						case <limit>{l}</limit> => c.limit = l.text.toInt
 						case <start>{s}</start> => c.start = parseDate(s.text)
