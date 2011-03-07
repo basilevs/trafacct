@@ -47,7 +47,7 @@ object AllCategories extends IterableProxy[HostCategory] with HostCategory.Colle
 		allCategories + c
 	}
 	override def getCategory(host: Host) = allCategories.getCategory(host)
-	allCategories + Homenet + Akamai + NSU + Google + ChoopaCom + Gym3 + Msecn + UpdateMicrosoftCom
+	allCategories + Homenet + Akamai + NSU + Google + ChoopaCom + Msecn + UpdateMicrosoftCom
 }
 
 object SubNet {

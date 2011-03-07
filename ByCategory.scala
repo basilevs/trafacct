@@ -24,7 +24,13 @@ trait ByHostCategory extends Configured {
 
 object ByCategory extends Configured {
 	case class CategorizedAccUnit(src:HostCategory, dst:HostCategory, protocol:String) 
-	implicit def hostsToCategory(h:Host) = active.getCategory(h)
+	implicit def hostToCategory(h:Host) = {
+		val existingCategory = active.getCategory(h)
+		if (existingCategory != null)
+			existingCategory
+		else
+			new SingleHost(h)
+	}
 //	import PrettyPrinter.bytesToHumanReadable
 	implicit def formatBytes1(l:Long) = formatBytes(l)
 	implicit def catToStr(i:HostCategory) = 
@@ -48,9 +54,9 @@ object ByCategory extends Configured {
 }
 
 object BySourceCategory extends ByHostCategory {
-	def categorize(x:AccUnit) = active.getCategory(x.src.host)
+	def categorize(x:AccUnit) = ByCategory.hostToCategory(x.src.host)
 }
 
 object ByDestinationCategory extends ByHostCategory {
-	def categorize(x:AccUnit) = active.getCategory(x.dst.host)
+	def categorize(x:AccUnit) = ByCategory.hostToCategory(x.dst.host)
 }
