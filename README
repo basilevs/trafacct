@@ -17,6 +17,15 @@ An alternative way is to clone git repository to obtain updates easily:
 git clone git://github.com/basilevs/trafacct.git trafacct #clones repository to a new folder trafacct
 cd trafacct && git pull #updates repository
 
+Script for Debian:
+sudo apt-get install git scala libjargs-java
+git clone git://github.com/basilevs/trafacct.git trafacct
+cd trafacct
+scalac *.scala
+echo export CLASSPATH=`pwd` >> ~/.bashrc
+
+
+
 CONFIGURATION
 Trafacct toolset reads its configuration from following locations:
 * command line -c key (accepts a path to an xml file)
