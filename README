@@ -50,8 +50,7 @@ Trafacct configuration file has the following structure
 
 <limit>NUMBER</limit> - a limit for a number of statistic lines that are printed to output by tools
 
-<skip> section enumerates hosts traffic to or from which is to be 
-dropped out of statistics
+<skip> section enumerates hosts traffic to or from which is to be dropped out of statistics
 
 <select> section enumerates hosts whose inbound and outbound should be processed by trafacct. If this section is empty all traffic is processed and display in statistics (except skipped, see <skip>)
 
@@ -59,8 +58,7 @@ dropped out of statistics
 
 
 CATEGORIES - is a list of elements of following types:
-<Host name="domain_name" ip="numerical_ip"> - 	represents  a single 
-host, name or ip properties might be ommitted
+<Host name="domain_name" ip="numerical_ip"> - 	represents  a single host, name or ip properties might be ommitted
 <SubNet ip="" maskLength=number> - selfexplanatory
 <Category name=""> - named category
 
@@ -95,13 +93,13 @@ ByCategory with source distinction ommited
 
 Each of them can be run with the following command line:
 
-CLASSPATH=path_to_your_trafacct_folder scala trafacct.name_of_tool
+CLASSPATH=path_to_your_trafacct_folder scala trafacct.name_of_tool <options>
 
 You may define required CLASSPATH enviroment variable in a user profile of your OS. If this is the case command reduces to:
 
-scala trafacct.name_of_tool
+scala trafacct.name_of_tool <options>
 
-COMMAND LINE SWITCHES
+COMMAND LINE KEYS
 To futher tune behaviour of trafacct without making changes to configuration files there are commnd line options. They should be appended to command line after tool name (see previous section).
 
 -c filename, --config filename - parses XML file with configuration. Is processed before any other command line options. May appear multiple times - each file mentioned will be parsed.
@@ -121,3 +119,12 @@ CATEGORY might be in one the following formats:
 ddd.ddd.ddd.ddd/dd - a subnet
 ddd.ddd.ddd.ddd - a single host
 NAME_LITERAL - a name of named category
+
+COMMAND LINE ARGUMENTS
+A number of optional unnamed arguments are supported. All of them are controlling time intervals at the moment (see <start>,<end> description at XML CONFIGURATION).
+
+Each argument denotes a different time interval for data to be processde from:
+today - processes data registered since today's midnight
+yesterday - from yesterday's midnight to today's midnight
+week - since week ago
+month - since month ago
