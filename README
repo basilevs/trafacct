@@ -48,18 +48,14 @@ Trafacct configuration file has the following structure
   </sources>
 </configuration>
 
-<limit>NUMBER</limit> - a limit for a number of statisticlines that 
-are printed to output by toolset components
+<limit>NUMBER</limit> - a limit for a number of statistic lines that are printed to output by tools
 
 <skip> section enumerates hosts traffic to or from which is to be 
 dropped out of statistics
 
-<select> section enumerates hosts traffic to or or from which 
-should be processed by trafacct. If this section is empty all 
-traffic is processed and display in statistics (except skipped, see 
-<skip>)
+<select> section enumerates hosts whose inbound and outbound should be processed by trafacct. If this section is empty all traffic is processed and display in statistics (except skipped, see <skip>)
 
-<activeCategories> enlists a set of named categories that should be use by By*Category tools. If this section is empty, all named categories are used. A category is refernced here is the following form: <Category name="name_of_category"/> (see NAMED_CATEGORIES). A name of categories will be used in tool output to represent destination or source of traffic.
+<inactiveCategories> prevents categoriztion of hosts matching the section's content with By*Category tools. Every matching host will heave its own statistics line in tool report.
 
 
 CATEGORIES - is a list of elements of following types:

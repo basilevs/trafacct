@@ -18,9 +18,21 @@ trait Configuration {
 	def rh(host:Host) = host.resolve
 	var skip:HostCategory.Collection = HostCategory.Collection.empty
 	var select:HostCategory.Collection = null
-	var active:HostCategory.Collection = HostCategory.Collection.empty
+	var inactiveCategories:HostCategory.Collection = HostCategory.Collection.empty
 	var sources = Set[AccSource]()
 	var humanReadable = false
+	def getCategory(h:Host) = {
+		if (inactiveCategories contains h) {
+			new SingleHost(h)
+		} else {
+			val c = AllCategories.getCategory(h)
+			if (c !=null) {
+				c
+			} else {
+				new SingleHost(h)
+			}
+		}
+	}
 	def formatBytes(bytes:Long): String =
 		if (humanReadable) 
 			PrettyPrinter.bytesToHumanReadable(bytes) 
@@ -46,9 +58,9 @@ trait Configuration {
 	<categories>
 		{AllCategories.map(categoryDefinitionToXml)}
 	</categories>
-	<activeCategories>
-		{active.map(categoryToXml)}
-	</activeCategories>
+	<inactiveCategories>
+		{inactiveCategories.map(categoryToXml)}
+	</inactiveCategories>
 	<skip>
 		{skip map categoryToXml}
 	</skip>
@@ -236,7 +248,7 @@ object Configuration {
 					node match {
 						case <activeCategories>{categories @ _*}</activeCategories> => {
 							val data = categories.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategory)
-							c.active = HostCategory.Collection(c.active ++ data)
+							c.inactiveCategories = HostCategory.Collection(c.inactiveCategories ++ data)
 						}
 						case <categories>{_*}</categories> => {}
 						case <limit>{l}</limit> => c.limit = l.text.toInt

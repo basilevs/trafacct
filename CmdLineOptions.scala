@@ -103,9 +103,6 @@ object CmdLine {
 		if (hosts.length > 0) {
 			c.select = HostCategory.Collection(hosts.map(parseHostCategory))
 		}
-		if (!c.active.elements.hasNext) {
-			c.active = AllCategories
-		}
 		var rem = Seq[String]()
 		for (arg <- parser.getRemainingArgs) {
 			arg match {
