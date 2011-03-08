@@ -246,7 +246,7 @@ object Configuration {
 			case <configuration>{nodes @ _*}</configuration> => {
 				for (node <- nodes) {
 					node match {
-						case <activeCategories>{categories @ _*}</activeCategories> => {
+						case <inactiveCategories>{categories @ _*}</inactiveCategories> => {
 							val data = categories.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategory)
 							c.inactiveCategories = HostCategory.Collection(c.inactiveCategories ++ data)
 						}
