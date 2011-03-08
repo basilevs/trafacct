@@ -2,6 +2,8 @@ package trafacct;
 import java.util.Date
 import java.text.SimpleDateFormat
 import java.lang.IllegalArgumentException
+import java.io.PrintStream
+import java.lang.System
 import scala.xml.{Node, NodeSeq, SpecialNode, Text}
 
 
@@ -21,6 +23,7 @@ trait Configuration {
 	var inactiveCategories:HostCategory.Collection = HostCategory.Collection.empty
 	var sources = Set[AccSource]()
 	var humanReadable = false
+	var output:PrintStream = System.out
 	def getCategory(h:Host) = {
 		if (inactiveCategories contains h) {
 			new SingleHost(h)
