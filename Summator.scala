@@ -10,11 +10,24 @@ class Summator[T](process: AccUnit => T) extends HashMap[T, Long] {
 			put(key, getOrElseUpdate(key, 0) + u.size)
 		}
 	}
-	case class Comparator(a: (T, Long)) extends Ordered[Comparator] {
-		override def equals(that:Any) = compare(that.asInstanceOf[Comparator]) == 0
-		def compare(that:Comparator) = Summator.compareBySecond(a, that.a)
+	def sizeSorted:Seq[(T, Long)] = {
+		case class Comparator(a: (T, Long)) extends Ordered[Comparator] {
+			override def equals(that:Any) = compare(that.asInstanceOf[Comparator]) == 0
+			def compare(that:Comparator) = Summator.compareBySecond(a, that.a)
+		}
+		implicit def toOrdered(a:(T, Long)) = new Comparator(a)
+//		println("There are %d entries in category map".format(size))
+		val data = toArray.map(toOrdered)
+		scala.util.Sorting.quickSort(data)
+		data.map(_.a)
 	}
-	def sorted:Seq[(T, Long)] = {
+	def categorySorted(implicit conv:(T) => Ordered[T]):Seq[(T, Long)] = {
+		case class Comparator(a: (T, Long)) extends Ordered[Comparator] {
+			override def equals(that:Any) = compare(that.asInstanceOf[Comparator]) == 0
+			def compare(that:Comparator) = {
+				if (a._1 == that.a._1) 0 else if (a._1 < that.a._1) -1 else 1
+			}
+		}
 		implicit def toOrdered(a:(T, Long)) = new Comparator(a)
 		val data = toArray.map(toOrdered)
 		scala.util.Sorting.quickSort(data)

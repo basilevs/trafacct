@@ -1,6 +1,7 @@
 package trafacct;
 import java.io.{File, FileFilter}
 import java.net.URL
+import java.lang.System
 
 trait FileOpener {
 	def open(u:URL): AccSource
@@ -21,7 +22,7 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 		var fileIter = listFiles.elements
 		var accIter:Iterator[AccUnit] = null
 		var url:URL = null
-		println("DirScanner: %s - %s".format(start, end))
+//		println("DirScanner: %s - %s".format(start, end))
 		def next:AccUnit = {
 			do {
 				try {
@@ -37,7 +38,7 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 				val s = open( url )
 				s.copySettings(DirScanner.this)
 				accIter = s.elements
-				println(url)
+				System.err.println(url)
 			} while (true)
 			null
 		}

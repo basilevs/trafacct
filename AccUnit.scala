@@ -92,11 +92,24 @@ trait AccUnitProcessor[T] {
 object DateTools {
 	import java.util.Calendar
 	def now = new Date
+	implicit def dateToOrdered(d:Date):Ordered[Date] = {
+		class OrderedDate(val d:Date) extends Ordered[Date] {
+			override def equals(that:Any) = compare(that.asInstanceOf[OrderedDate].d) == 0
+			def compare(that:Date) = d.compareTo(that)
+		}
+		new OrderedDate(d)
+	}
 	def dayStart(d:Date) = {
 		val cal = Calendar.getInstance()
 		cal.setTime(d)
 		for (i <- Manipulator.genSeq(Calendar.MILLISECOND, Calendar.HOUR_OF_DAY, Calendar.SECOND, Calendar.MINUTE))
 			cal.set(i, 0)
+		cal.getTime
+	}
+	def addHours(d:Date, n:Int) = {
+		val cal = Calendar.getInstance()
+		cal.setTime(d)
+		cal.add(Calendar.HOUR, n)
 		cal.getTime
 	}
 	def addDays(d:Date, n:Int) = {
@@ -111,7 +124,7 @@ object DateTools {
 		// Unix timestamp is seconds past epoch
 		new Date((unixTimeStamp * 1000).toLong);
 	}
-	implicit def dateToString(d:Date) = {
+	implicit def dateToString(d:Date):String = {
 		if (d!=null)
 			String.format("%1$tY-%1$tm-%1$td %1$tT ", d)
 		else 

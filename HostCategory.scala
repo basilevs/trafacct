@@ -129,7 +129,8 @@ object Msecn extends IterableProxy[HostCategory] with HostCategory.Collection {
 		new SubNet("213.199.148.0", 24),
 		new SubNet("213.199.149.0", 24),
 		new SubNet("65.54.93.0", 24),
-		new SubNet("65.54.89.0", 24)
+		new SubNet("65.54.89.0", 24),
+		new SubNet("94.245.64.0", 19)
 	)
 	def self = subnets
 	override def toString = "mscen.net"

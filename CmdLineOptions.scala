@@ -106,6 +106,10 @@ object CmdLine {
 		var rem = Seq[String]()
 		for (arg <- parser.getRemainingArgs) {
 			arg match {
+				case "hour" => {
+					c.end = now
+					c.start = addHours(c.end, -1)
+				}
 				case "today" => {
 					c.end = null
 					c.start = dayStart(now)

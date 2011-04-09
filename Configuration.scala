@@ -113,12 +113,16 @@ object Configuration {
 		Set() ++ rv
 	}
 	val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
+	val dateFormat2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
 	def parseDate(s:String): Date = {
 		if (s == null) {
 			null
 		} else  {
 			try {
-				dateFormat.parse(s)
+				if (s.indexOf("T") >=0)
+					dateFormat2.parse(s)
+				else
+					dateFormat.parse(s)
 			} catch {
 				case e:IllegalArgumentException => throw new ParseError("Can't parse date "+s, e)
 			}
@@ -128,7 +132,7 @@ object Configuration {
 		if (date == null) {
 			""
 		} else {
-			dateFormat.format(date)
+			dateFormat2.format(date)
 		}
 	}
 	def hostToXml(host: Host) = {
