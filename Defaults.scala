@@ -20,7 +20,7 @@ object NoSum {
 			configure(srcs)
 			var count = 0
 			for (i <- srcs) {
-				print(pp.format(i.src.host, i.dst.host, i.protocol, i.size)+"\n")
+				print(pp.format(i.src.host, i.dst.host, i.protocol, formatBytes(i.size))+"\n")
 				count += 1
 			}
 			println("Total units: "+count)
@@ -53,7 +53,7 @@ object Destination {
 			val pp = new PrettyPrinter
 			def printAcc(i:AccResult) {
 				implicit def hostToStr(i:Host) = i.toString
-				println(pp.format(i._1.dst, i._1.protocol, i._2.toString))
+				println(pp.format(i._1.dst, i._1.protocol, formatBytes(i._2)))
 			}
 			data.drop(data.length-limit).foreach(printAcc)
 			0
