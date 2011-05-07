@@ -9,7 +9,7 @@ import java.util.{Date}
 unix_time protocol_code src src_port dst dst_port size interface
 */
 class NetAcct(reader: BufferedReader) extends AccSource {
-	def elements = new Iterator[AccUnit] {
+	def iterator = new Iterator[AccUnit] {
 		var reader = NetAcct.this.reader
 		def hasNext = if (reader == null) false else reader.ready
 		def next:AccUnit = {
@@ -40,6 +40,6 @@ object NetAcct {
 	def parseEndPoint(host:String , port:String) = new Endpoint(host, port.toInt)
 	case class Dir(dir:File) extends DirScanner(dir) {
 		fileFilter = x => x.getName.matches(".*net.*log(\\.\\d\\d?)?(\\.gz)?$")
-		def open(u:URL): AccSource = new NetAcct(FileOperations.open(u))
+		def open(u:File): AccSource = new NetAcct(FileOperations.open(u))
 	}
 }

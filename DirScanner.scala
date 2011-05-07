@@ -4,7 +4,7 @@ import java.net.URL
 import java.lang.System
 
 trait FileOpener {
-	def open(u:URL): AccSource
+	def open(u:File): AccSource
 }
 	
 abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
@@ -18,27 +18,21 @@ abstract class DirScanner(dir:File)  extends AccSource  with FileOpener {
 			throw new ParseError("Not a directory: "+dir, null)
 		rawList.filter(start == null || _.lastModified > start.getTime)
 	}
-	def elements = new Iterator[AccUnit] {
-		var fileIter = listFiles.elements
+	def iterator = new Iterator[AccUnit] {
+		var fileIter = listFiles.iterator
 		var accIter:Iterator[AccUnit] = null
-		var url:URL = null
 //		println("DirScanner: %s - %s".format(start, end))
 		def next:AccUnit = {
 			do {
-				try {
-					if (accIter!=null && accIter.hasNext)
-						return accIter.next
-					if (!fileIter.hasNext)
-						return null
-				} catch {
-					case e:ParseError => throw new ParseError("Can't parse "+url, e)
-				}
+				if (accIter!=null && accIter.hasNext)
+					return accIter.next
+				if (!fileIter.hasNext)
+					return null
 				val file = fileIter.next
-				url = file.toURL
-				val s = open( url )
+				val s = open(file)
 				s.copySettings(DirScanner.this)
-				accIter = s.elements
-				System.err.println(url)
+				accIter = s.iterator
+				System.err.println(file.getPath)
 			} while (true)
 			null
 		}

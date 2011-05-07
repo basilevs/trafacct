@@ -1,6 +1,7 @@
 package trafacct;
 import java.net.InetAddress
 import scala.collection.mutable.{BufferProxy, HashSet}
+import scala.collection.IterableProxy
 
 trait HostCategory {
 	def contains(host: Host): Boolean
@@ -47,7 +48,8 @@ object AllCategories extends IterableProxy[HostCategory] with HostCategory.Colle
 		allCategories + c
 	}
 	override def getCategory(host: Host) = allCategories.getCategory(host)
-	allCategories + Homenet + Akamai + NSU + Google + ChoopaCom + Msecn + UpdateMicrosoftCom
+	allCategories ++= Set(Homenet, Akamai, NSU, Google, ChoopaCom, Msecn, UpdateMicrosoftCom)
+	assert(allCategories.size>0)
 }
 
 object SubNet {

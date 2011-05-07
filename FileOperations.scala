@@ -1,7 +1,7 @@
 package trafacct
 import java.net.URL
 import java.lang.{Exception, Throwable}
-import java.io.{InputStream, BufferedReader, InputStreamReader, File}
+import java.io.{InputStream, BufferedReader, InputStreamReader, File, FileInputStream}
 import java.util.zip.GZIPInputStream
 
 object FileOperations {
@@ -21,7 +21,7 @@ object FileOperations {
 			if (s.matches("\\w:\\\\.*")) 
 				return new URL(processWindowsPath(s))
 			if (!s.matches("\\w+://.*")) {
-				return (new File(s)).toURL()
+				return (new File(s)).toURI().toURL()
 			}
 			return new URL(s);
 		} catch {
@@ -35,6 +35,15 @@ object FileOperations {
 			u.openStream()
 		}
 	}
+	def openPotentialArchive(f:File) = {
+		if (f.getName().endsWith("gz")) {
+			new GZIPInputStream(new FileInputStream(f))
+		} else {
+			new FileInputStream(f)
+		}
+	}
 	def open(u:URL) = new BufferedReader(new InputStreamReader(openPotentialArchive(u)))
+	def open(f:File) = new BufferedReader(new InputStreamReader(openPotentialArchive(f)))
+
 }
 

@@ -25,7 +25,7 @@ case class Host(name:String, val ip:InetAddress) {
 	}
 	def compare1(that: Host):Int = {
 		if (ip != null && that.ip != null) {
-			compareSeqs(ip, that.ip)
+			compareSeqs(addressToBytes(ip), addressToBytes(that.ip))
 		} else if (name != null && that.name != null) {
 			name.compare(that.name)
 		} else {
@@ -61,7 +61,7 @@ case class Host(name:String, val ip:InetAddress) {
 object Host {
 	implicit def addressToBytes(a:InetAddress):Array[Byte] = a.getAddress
 	def compareSeqs(a:Seq[Byte], b:Seq[Byte]):Int = {
-		val len = scala.Math.min(a.length, b.length)
+		val len = scala.math.min(a.length, b.length)
 		for (i <- 0 until len)
 			if (a(i)!=b(i))
 				return a(i).compare(b(i))

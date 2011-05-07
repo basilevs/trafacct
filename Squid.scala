@@ -11,7 +11,7 @@ import java.util.regex.Pattern
 unix_time protocol_code src src_port dst dst_port size interface
 */
 class Squid(reader: BufferedReader) extends AccSource {
-	def elements = new Iterator[AccUnit] {
+	def iterator = new Iterator[AccUnit] {
 		def hasNext = reader.ready
 		def next:AccUnit = {
 			import NetAcct._
@@ -97,7 +97,7 @@ object Squid {
 	def parseUrl(s:String): FastURL = FastURL.strToFastUrl(s)
 	case class Dir(dir:File) extends DirScanner(dir) {
 		fileFilter = x => x.getName.matches(".*access.*log(\\.\\d\\d?)?(\\.gz)?$")
-		def open(u:URL): AccSource = new Squid(FileOperations.open(u))
+		def open(u:File): AccSource = new Squid(FileOperations.open(u))
 	}
 }
 
