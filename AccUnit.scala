@@ -26,7 +26,7 @@ object Endpoint {
 
 case class AccUnit(size: Long, start: Date, src:Endpoint, dst:Endpoint, protocol:String);
 
-trait AccSource extends Iterable[AccUnit] {
+abstract trait AccSource extends Iterable[AccUnit] {
 	var start:Date = null
 	var end:Date = null
 	var skip:HostCategory = HostCategory.Collection.empty
@@ -56,9 +56,9 @@ trait AccSource extends Iterable[AccUnit] {
 }
 
 class AccSources(srcs:Iterable[AccSource]) extends AccSource {
-	def elements = new Iterator[AccUnit] {
+	def iterator = new Iterator[AccUnit] {
 
-		var colIter = srcs.elements
+		var colIter = srcs.iterator
 		var curIter:Iterator[AccUnit] = null
 //		println("AccSources: "+start)	
 		def next:AccUnit = {
@@ -69,7 +69,7 @@ class AccSources(srcs:Iterable[AccSource]) extends AccSource {
 				if (colIter.hasNext) {
 					var col = colIter.next
 					col.copySettings(AccSources.this)
-					curIter = col.elements
+					curIter = col.iterator
 				} else
 					return null
 			} while (true)
@@ -164,7 +164,7 @@ class AccDropper(val shownFields:Iterable[Field]) extends AccUnitProcessor[AccUn
 	
 	def process(input: AccUnit) = {
 		var i = input
-		for (val field <- droppedFields)
+		for (field <- droppedFields)
 			i = field.reset(i)
 //		println("Applied %d resetters".format(droppedFields.length))
 //		println(input + " => " + i)
@@ -172,7 +172,7 @@ class AccDropper(val shownFields:Iterable[Field]) extends AccUnitProcessor[AccUn
 	}
 	def format(i:AccUnit):String = {
 		val rv = new StringBuilder
-		for (val field <- shownFields)
+		for (field <- shownFields)
 			rv.append(field.extract(i) + " ")
 		rv.toString
 	}

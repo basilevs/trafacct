@@ -42,6 +42,9 @@ object Destination {
 	case class Comparator(a:AccResult) extends Ordered[AccResult] {
 		def compare(that:AccResult) = compareBySecond(a, that)
 	}
+	object ResultOrder extends Ordering[AccResult] {
+		def compare(x:AccResult, y:AccResult) = compareBySecond(x, y)
+	}
 	val runner = new Configured {
 		def run = {
 			val s = new Summator[Rule]((x:AccUnit) => new Rule(x))
@@ -49,7 +52,9 @@ object Destination {
 			configure(srcs)
 			s.sum(srcs)
 			val data = s.toArray
-			scala.util.Sorting.quickSort(data)(new Comparator(_))
+			implicit def toOrdered(a:AccResult) = new Comparator(a)
+			implicit val order = ResultOrder 
+			scala.util.Sorting.quickSort(data)
 			val pp = new PrettyPrinter
 			def printAcc(i:AccResult) {
 				implicit def hostToStr(i:Host) = i.toString

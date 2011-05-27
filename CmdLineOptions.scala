@@ -5,7 +5,11 @@ import java.util.{Date, Locale}
 import java.text.SimpleDateFormat
 import java.io.File
 import java.lang.IllegalArgumentException
-import scala.collection.jcl.Conversions._
+import scala.collection.JavaConversions._
+
+
+import scala.util.control.Exception.ignoring
+
 
 class DateOption(short:Char, long:String) extends Option(short, long, true) {
 	override def parseValue(arg:String, locale:Locale) = Configuration.parseDate(arg)
@@ -61,6 +65,9 @@ object CmdLine {
 
 	def parse(c:Configuration, args:Array[String]): Seq[String] = {
 		import DateTools._
+		ignoring(classOf[NumberFormatException]) {
+			c.limit = math.abs(System.getenv("LINES").toInt)
+		} 
 		val parser = new CmdLineParser
 		val configOpt = parser.addStringOption('c', "config")
 		val startOpt = parser.addOption(new DateOption('s', "start"))
@@ -121,6 +128,10 @@ object CmdLine {
 				case "week" => {
 					c.end = now
 					c.start = weekBefore(c.end)
+				}
+				case "month" => {
+					c.end = now
+					c.start = addDays(c.end, -30)
 				}
 				case _ => rem = rem ++ Seq(arg)
 			}

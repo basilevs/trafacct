@@ -10,7 +10,7 @@ class PrettyPrinter {
 		var rv=""
 		for (i <- 0 to input.length-1) {
 			val in = if (input(i) == null) "null" else input(i)
-			val width = Math.max(widthArray(i), in.length+1)
+			val width = math.max(widthArray(i), in.length+1)
 			widthArray(i) = width
 			rv = rv + spaces(width - in.length) + in
 		}
@@ -23,7 +23,7 @@ object PrettyPrinter {
 	implicit def longToHumanReadable(l:Long, base:Int, names:Seq[String]):String  = {
 		var d = l.toDouble
 		for (name <- names) {
-			if (Math.abs(d/base) < 1.) {
+			if (math.abs(d/base) < 1.) {
 				return "%.1f".format(d)+name
 			}
 			d /= base

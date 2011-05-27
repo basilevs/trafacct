@@ -214,7 +214,7 @@ object Configuration {
 				AllCategories.find(_.toString == name).get
 			} catch {
 				case e:java.util.NoSuchElementException => {
-					val allString = AllCategories.map(_.toString).reduceLeft(_+", "+_)
+					val allString = AllCategories.toString
 					throw new ParseError("No collection named "+name+" was found. Known collections are: "+allString, e)
 				}
 			}
