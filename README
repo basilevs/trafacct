@@ -69,6 +69,7 @@ Trafacct configuration file has the following structure
 CATEGORIES - is a list of elements of following types:
 <Host name="domain_name" ip="numerical_ip"> - 	represents  a single host, name or ip properties might be ommitted
 <SubNet ip="" maskLength=number> - selfexplanatory
+<Domain suffix="domain_suffix"> - mathes hostnames with the given suffix. Only works for sources providing hostnames (Squid log, for example)
 <Category name=""> - named category
 
 NAMED_CATEGORIES - a list of category definitions:

@@ -179,6 +179,7 @@ object Configuration {
 	def categoryDefinitionToXml(cd:HostCategory):Node = cd match {
 		case cd:HostCategory.Collection => <Category name={cd.toString} builtin={cd.isBuiltin}>{cd.map(categoryDefinitionToXml)}</Category>
 		case cd:SubNet => categoryToXml(cd)
+		case cd:Domain => categoryToXml(cd)
 		case SingleHost(host) => categoryToXml(cd)
 		case _ => <Category name={cd.toString} builtin={cd.isBuiltin}/>
 	}
@@ -188,11 +189,12 @@ object Configuration {
 		xml match {
 			case <SubNet/> => xmlToCategory(xml)
 			case <Host/> => xmlToCategory(xml)
+			case <Domain/> => xmlToCategory(xml)
 			case <Category>{_*}</Category> => {
 				val name = (xml \ "@name").text
 				AllCategories.find(_.toString == name).getOrElse {
 					val rv = new HostCategory.Set(name)
-					(xml \ "_").filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategoryDefinition).foreach(rv+_)
+					(xml \ "_").filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategoryDefinition).foreach(rv+=_)
 					rv
 				}
 			}
@@ -202,12 +204,14 @@ object Configuration {
 	def categoryToXml(c:HostCategory) = c match {
 		case s:SubNet => <SubNet ip={Host.bytesToString(SubNet.longToBytes(s.ip, s.byteCount))} maskLength={s.maskLength.toString}/>
 		case s:SingleHost => hostToXml(s.host)
+		case s:Domain => {println("Domain:"+s.suffix); <Domain suffix={s.suffix}/>}
 		case _ => <Category name={c.toString}/>
 	}
 
 	def xmlToCategory(xml:Node):HostCategory = xml match {
 		case <SubNet/> => new SubNet((xml \ "@ip").text, (xml \ "@maskLength").text.toInt)
 		case <Host/> => new SingleHost(xmlToHost(xml))
+		case <Domain/> => new Domain((xml \ "@suffix").text)
 		case <Category/> => {
 			val name = (xml \ "@name").text
 			try {
@@ -257,7 +261,12 @@ object Configuration {
 							val data = categories.filter(!_.isInstanceOf[SpecialNode]).map(xmlToCategory)
 							c.inactiveCategories = HostCategory.Collection(c.inactiveCategories ++ data)
 						}
-						case <categories>{_*}</categories> => {}
+						case <categories>{categories @ _*}</categories> => {
+							categories
+							.filter(!_.isInstanceOf[SpecialNode])
+							.map(xmlToCategoryDefinition)
+							.foreach(AllCategories.register)
+						}
 						case <limit>{l}</limit> => c.limit = l.text.toInt
 						case <start>{s}</start> => c.start = parseDate(s.text)
 						case <end>{s}</end> => c.end = parseDate(s.text)

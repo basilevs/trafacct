@@ -45,7 +45,8 @@ object AllCategories extends IterableProxy[HostCategory] with HostCategory.Colle
 	def register(c:HostCategory) {
 		if (allCategories.find(_.toString == c.toString).isDefined)
 			return
-		allCategories + c
+//		println("Registering: "+c.toString)
+		allCategories += c
 	}
 	override def getCategory(host: Host) = allCategories.getCategory(host)
 	allCategories ++= Set(Homenet, Akamai, NSU, Google, ChoopaCom, Msecn, UpdateMicrosoftCom)
@@ -106,13 +107,15 @@ case class SubNet(ip:Long,  maskLength:Int, byteCount:Int) extends HostCategory 
 }
 
 case class Domain(suffix:String) extends HostCategory {
+//	println ("Domain: "+suffix)
 	def contains(host: Host) = {
 		if (host.name == null) {
 			false
 		} else {
+			println("Host "+host+" belongs to "+toString)
 			host.name.endsWith(suffix)
 		}
-	}	
+	}
 	override def toString = {
 		"*"+suffix
 	}
@@ -162,7 +165,8 @@ object Akamai extends IterableProxy[HostCategory] with HostCategory.Collection {
 		new SubNet("92.123.65.0", 24),
 		new SubNet("92.123.155.0", 24),
 		new SubNet("95.100.0.0", 16),
-		new SubNet("95.101.0.0", 16)
+		new SubNet("95.101.0.0", 16),
+		new SubNet("77.67.0.0", 17)
 	)
 	def self = subnets
 	override def toString = "*.akamaitechnologies.com"
