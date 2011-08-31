@@ -208,21 +208,25 @@ object Configuration {
 		case _ => <Category name={c.toString}/>
 	}
 
-	def xmlToCategory(xml:Node):HostCategory = xml match {
-		case <SubNet/> => new SubNet((xml \ "@ip").text, (xml \ "@maskLength").text.toInt)
-		case <Host/> => new SingleHost(xmlToHost(xml))
-		case <Domain/> => new Domain((xml \ "@suffix").text)
-		case <Category/> => {
-			val name = (xml \ "@name").text
-			try {
-				AllCategories.find(_.toString == name).get
-			} catch {
-				case e:java.util.NoSuchElementException => {
-					val allString = AllCategories.toString
-					throw new ParseError("No collection named "+name+" was found. Known collections are: "+allString, e)
+	def xmlToCategory(xml:Node):HostCategory = try {
+		xml match {
+			case <SubNet/> => new SubNet((xml \ "@ip").text, (xml \ "@maskLength").text.toInt)
+			case <Host/> => new SingleHost(xmlToHost(xml))
+			case <Domain/> => new Domain((xml \ "@suffix").text)
+			case <Category/> => {
+				val name = (xml \ "@name").text
+				try {
+					AllCategories.find(_.toString == name).get
+				} catch {
+					case e:java.util.NoSuchElementException => {
+						val allString = AllCategories.toString
+						throw new ParseError("No collection named "+name+" was found. Known collections are: "+allString, e)
+					}
 				}
 			}
 		}
+	} catch {
+		case e => throw new ParseError("Error while parsing XML entry "+xml, e)
 	}
 
 	def sourceToXml(s:AccSource): Node = {
