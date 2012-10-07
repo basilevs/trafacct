@@ -1,5 +1,7 @@
 package trafacct;
 import scala.collection.mutable.HashMap
+import scala.util.Sorting
+import scala.math.Ordering
 
 class Summator[T](process: AccUnit => T) extends HashMap[T, Long] {
 	def sum(from: Iterable[AccUnit]) {sum(from.iterator)}
@@ -11,27 +13,27 @@ class Summator[T](process: AccUnit => T) extends HashMap[T, Long] {
 		}
 	}
 	def sizeSorted:Seq[(T, Long)] = {
-		case class Comparator(a: (T, Long)) extends Ordered[Comparator] {
-			override def equals(that:Any) = compare(that.asInstanceOf[Comparator]) == 0
-			def compare(that:Comparator) = Summator.compareBySecond(a, that.a)
-		}
-		implicit def toOrdered(a:(T, Long)) = new Comparator(a)
-//		println("There are %d entries in category map".format(size))
-		val data = toArray.map(toOrdered)
-		scala.util.Sorting.quickSort(data)
-		data.map(_.a)
-	}
-	def categorySorted(implicit conv:(T) => Ordered[T]):Seq[(T, Long)] = {
-		case class Comparator(a: (T, Long)) extends Ordered[Comparator] {
-			override def equals(that:Any) = compare(that.asInstanceOf[Comparator]) == 0
-			def compare(that:Comparator) = {
-				if (a._1 == that.a._1) 0 else if (a._1 < that.a._1) -1 else 1
+		class C extends Ordering[(T, Long)] {
+			def compare(x: (T, Long), y:(T, Long)) = {
+				(x._2 - y._2).toInt
 			}
 		}
-		implicit def toOrdered(a:(T, Long)) = new Comparator(a)
-		val data = toArray.map(toOrdered)
-		scala.util.Sorting.quickSort(data)
-		data.map(_.a)
+//		println("There are %d entries in category map".format(size))
+		implicit val c = new C
+		val a = toArray
+		scala.util.Sorting.quickSort(a)
+		a
+	}
+	def categorySorted(implicit o:Ordering[T]):Seq[(T, Long)] = {		
+		class C extends Ordering[(T, Long)] {
+			def compare(x: (T, Long), y:(T, Long)) = {
+				o.compare(x._1, y._1)
+			}
+		}
+		implicit val c = new C
+		val a = toArray
+		scala.util.Sorting.quickSort(a)
+		a
 	}
 }
 

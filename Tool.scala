@@ -29,13 +29,11 @@ trait SumTool[T] extends Configured {
 			val data = s.sizeSorted
 			data.drop(data.size - limit)
 		} else {
-			def compare1(category1:T, category2:T) = compare(category1, category2)
-			case class OrderedT(val d:T) extends Ordered[T] {
-				override def equals(that:Any) = compare(that.asInstanceOf[OrderedT].d) == 0
-				def compare(that:T) = compare1(d, that)
+			def compare1(x:T, y:T) = compare(x,y)
+			case class Comparator extends Ordering[T] {
+				def compare(x:T, y:T) = compare1(x,y)
 			}
-			implicit def toOrdered(d:T) = OrderedT(d)
-			s.categorySorted
+			s.categorySorted(new Comparator)
 		}
 //		println("There are %d entries in result".format(result.size))
 		result.foreach(printAcc)
